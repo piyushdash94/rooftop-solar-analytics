@@ -1,0 +1,103 @@
+{
+ "eta_ref": 0.966326140705204,
+ "periods": [
+  {
+   "month": "Feb",
+   "weather_days": 22,
+   "days": 22,
+   "kt_mean": 0.6110045371254121,
+   "ghi_mean": 5.249131818181818,
+   "poa_mean": 5.622390271948736,
+   "f_temp_mean": 0.9280177272727272,
+   "e_eff_mean": 5.218288746025606,
+   "expected_kwh": 332.80954245213326,
+   "actual_kwh": 321.91,
+   "residual_pct": -3.275008995182544,
+   "rain_days": 2
+  },
+  {
+   "month": "Mar",
+   "weather_days": 31,
+   "days": 31,
+   "kt_mean": 0.5307892200220725,
+   "ghi_mean": 5.122674193548388,
+   "poa_mean": 5.243522100314004,
+   "f_temp_mean": 0.9141448387096772,
+   "e_eff_mean": 4.7931180556575,
+   "expected_kwh": 430.74952035811873,
+   "actual_kwh": 389.55,
+   "residual_pct": -9.564612010215601,
+   "rain_days": 6
+  },
+  {
+   "month": "Apr",
+   "weather_days": 30,
+   "days": 30,
+   "kt_mean": 0.528902033214496,
+   "ghi_mean": 5.576553333333333,
+   "poa_mean": 5.550544594782229,
+   "f_temp_mean": 0.904095,
+   "e_eff_mean": 5.017148422778912,
+   "expected_kwh": 436.3381505456232,
+   "actual_kwh": 436.34,
+   "residual_pct": 0.0004238580501083518,
+   "rain_days": 11
+  },
+  {
+   "month": "May",
+   "weather_days": 31,
+   "days": 31,
+   "kt_mean": 0.5636321873573089,
+   "ghi_mean": 6.1575903225806465,
+   "poa_mean": 6.007203139628049,
+   "f_temp_mean": 0.9031716129032257,
+   "e_eff_mean": 5.426192020854504,
+   "expected_kwh": 487.64282106410656,
+   "actual_kwh": 436.53,
+   "residual_pct": -10.48161048543093,
+   "rain_days": 13
+  },
+  {
+   "month": "Jun",
+   "weather_days": 30,
+   "days": 30,
+   "kt_mean": 0.4326735789003987,
+   "ghi_mean": 4.7585733333333335,
+   "poa_mean": 4.635553868055114,
+   "f_temp_mean": 0.905466,
+   "e_eff_mean": 4.193086286511827,
+   "expected_kwh": 364.67,
+   "actual_kwh": 364.67,
+   "residual_pct": 0.0,
+   "rain_days": 21
+  },
+  {
+   "month": "Jul",
+   "weather_days": 31,
+   "days": 31,
+   "kt_mean": 0.28270166219977505,
+   "ghi_mean": 3.08351935483871,
+   "poa_mean": 3.037013948260418,
+   "f_temp_mean": 0.9157812903225807,
+   "e_eff_mean": 2.7809374723556335,
+   "expected_kwh": 249.91820949396308,
+   "actual_kwh": 268.76,
+   "residual_pct": 7.539182736699324,
+   "rain_days": 27
+  },
+  {
+   "month": "Aug",
+   "weather_days": 27,
+   "days": 31,
+   "kt_mean": 0.2898355767021822,
+   "ghi_mean": 3.0827740740740746,
+   "poa_mean": 3.051037898584927,
+   "f_temp_mean": 0.9163527586206895,
+   "e_eff_mean": 2.7944706349788055,
+   "expected_kwh": 251.13441223321738,
+   "actual_kwh": 263.5,
+   "residual_pct": 4.923892212469573,
+   "rain_days": 28
+  }
+ ]
+}

@@ -1,0 +1,284 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A 3 kW rooftop in Bhubaneswar — seven months, forty-two years</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{--paper:#F6F4EF;--card:#FFFFFF;--ink:#1F262B;--mute:#6C7780;--rule:#DEDBD3;
+--sun:#C3821F;--dim:#9A5B3D;--rain:#3D6B8A;--pv:#2B6350;--grid:#E9E6DE}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+background:var(--paper);color:var(--ink);line-height:1.55;font-size:15px;
+padding:28px 16px 64px;max-width:840px;margin:0 auto}
+h1{font-size:1.75rem;font-weight:600;letter-spacing:-.024em;max-width:22ch;line-height:1.15}
+.lede{color:var(--mute);margin:12px 0 6px;max-width:60ch;font-size:1.02rem}
+.meta{color:var(--mute);font-size:.79rem}
+h2{font-size:1.12rem;font-weight:600;margin-bottom:3px;letter-spacing:-.012em}
+h3{font-size:.83rem;font-weight:600;color:var(--mute);margin-bottom:4px}
+.sub{color:var(--mute);font-size:.9rem;margin-bottom:13px;max-width:63ch}
+hr{border:0;border-top:1px solid var(--rule);margin:36px 0 20px}
+.part{font-size:.72rem;letter-spacing:.1em;color:var(--sun);font-weight:600;margin-bottom:14px}
+.cw{position:relative;height:280px}.cw.s{height:210px}.cw.h{height:300px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:14px 20px;margin:18px 0}
+.stats div{border-top:2px solid var(--ink);padding-top:7px}
+.stats b{display:block;font-size:1.36rem;font-weight:600;letter-spacing:-.02em;line-height:1.15}
+.stats span{font-size:.77rem;color:var(--mute)}
+.stats .pv{border-color:var(--pv)}.stats .pv b{color:var(--pv)}
+.stats .d{border-color:var(--dim)}.stats .d b{color:var(--dim)}
+table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:5px}
+th,td{text-align:right;padding:6px 5px;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--mute);font-size:.73rem}
+tr.t td{border-top:2px solid var(--ink);border-bottom:0;font-weight:600}
+td.neg{color:var(--dim);font-weight:600}
+.fn{font-size:.79rem;color:var(--mute);margin-top:10px;max-width:68ch;line-height:1.6}
+.key{background:var(--card);border-left:3px solid var(--sun);padding:11px 14px;margin:13px 0;font-size:.89rem;max-width:66ch}
+.key.pv{border-color:var(--pv)}.key.d{border-color:var(--dim)}.key.r{border-color:var(--rain)}
+.sx{overflow-x:auto}
+.rbar{display:flex;align-items:center;gap:9px;margin:5px 0;font-size:.81rem}
+.rbar i{font-style:normal;width:150px;color:var(--mute);flex-shrink:0}
+.rbar u{text-decoration:none;height:11px;border-radius:2px;display:block}
+.rbar b{font-variant-numeric:tabular-nums;font-weight:600;width:48px}
+.two{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:660px){.two{grid-template-columns:1fr 1fr}}
+code{font-family:ui-monospace,monospace;font-size:.87em;background:#EFEDE6;padding:1px 4px;border-radius:3px}
+.sig{color:var(--dim);font-weight:600}
+ol.act{margin:8px 0 0 18px;font-size:.89rem}ol.act li{margin-bottom:7px;padding-left:3px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+
+<h1>A 3 kW rooftop in Bhubaneswar</h1>
+<p class="lede">Seven billing periods from a bifacial array on a fourth-floor terrace in Satya Vihar, read against daily satellite weather — and against forty-two years of the sky above it.</p>
+<p class="meta">Bills: TPCODL, 8 Feb – 1 Sep 2026. Weather: NASA POWER, 20.30°N 85.82°E. Compiled 4 September 2026.</p>
+
+<div class="stats">
+<div class="pv"><b>2,481</b><span>kWh generated</span></div>
+<div><b>45%</b><span>of demand offset on the bill</span></div>
+<div><b>26%</b><span>used directly from the panels</span></div>
+<div><b>₹15,500</b><span>estimated savings</span></div>
+<div class="d"><b>−9.6%</b><span>sunlight lost since the 1980s</span></div>
+</div>
+
+<hr>
+<div class="part">PART ONE · WHAT HAPPENED</div>
+<h2>Sun and rain, day by day</h2>
+<p class="sub">Daily sunlight as the filled area, daily rainfall as bars pointing down, monthly generation as dots on the right axis. The monsoon arrives in the second week of June and the array halves.</p>
+<div class="cw h"><canvas id="hero"></canvas></div>
+<p class="fn">206 days. The array tracked the sun closely until the rains; from July the sky delivered half the energy it did in May.</p>
+
+<hr>
+<h2>Where every unit went</h2>
+<p class="sub">Household demand split into what the panels covered directly and what was bought from the grid. Exported surplus sits separately — it returns as a bill credit.</p>
+<div class="cw"><canvas id="bal"></canvas></div>
+<div class="key pv">Solar covered 160–253 kWh a month with remarkable steadiness. The variable was demand: it doubled from February to June as cooling load arrived, then eased with the rains. A 3 kW array against a 1,050 kWh summer month is <b>undersized, not underperforming</b> — the distinction that governs every recommendation below.</div>
+
+<hr>
+<h2>Timing matters as much as volume</h2>
+<div class="two">
+<div><h3>Self-consumption — share of solar used the moment it was made</h3><div class="cw s"><canvas id="scr"></canvas></div></div>
+<div><h3>Bill offset and true self-sufficiency</h3><div class="cw s"><canvas id="suff"></canvas></div></div>
+</div>
+<p class="fn">Self-consumption rose from 50% to 69% as air-conditioning pulled load into daylight hours. The two lines on the right are not the same measure: <b>bill offset</b> (45% lifetime) counts export credit under net metering; <b>self-sufficiency</b> (26%) counts only energy used directly. Confusing them overstates independence by nineteen points.</p>
+
+<hr>
+<div class="part">PART TWO · WHAT EXPLAINS IT</div>
+<h2>Sunlight explains almost everything</h2>
+<p class="sub">Average daily irradiance against average daily generation, per billing period.</p>
+<div class="cw"><canvas id="ghigen"></canvas></div>
+<div class="key">Correlation <b>+0.96</b>; sunlight alone explains <b>91%</b> of month-to-month variation. Fitted relationship: <code>generation/day = 2.09 × sunlight + 2.30</code>, residual sd 0.78 kWh/day. Everything else — dust, heat, outages, shading — lives in the remaining 9%. That residual is where the diagnostics are.</div>
+
+<hr>
+<h2>Which features predict what</h2>
+<p class="sub">Pearson correlation across seven periods. Bar length is strength, colour is direction.</p>
+<div id="corr"></div>
+<p class="fn">Cooling degree-days beat raw temperature for predicting import (+0.80 vs +0.43), because import follows air-conditioning runtime rather than heat itself. Cloud fraction is useless at monthly resolution — it averages out. With n = 7 these are descriptive, not inferential.</p>
+
+<hr>
+<h2>Two months genuinely under-delivered</h2>
+<p class="sub">Residual after normalising for plane-of-array irradiance and cell temperature. Zero means the array did what the weather allowed.</p>
+<div class="cw"><canvas id="resid"></canvas></div>
+<div class="sx"><table>
+<tr><th>Period</th><th>Sun</th><th>Yield</th><th>Expected</th><th>Actual</th><th>Residual</th></tr>
+<tbody id="tres"></tbody></table></div>
+<div class="key d">March (−9.6%) and May (−10.5%) are the only months that fell short of what the sky offered. Their raw yields differ by 12% — May looks far better — yet their residuals are within a point of each other. <b>That is the entire argument for normalising.</b><br><br>
+May is the more interesting case: most sunlight of any month, worst conversion, hottest at 39.3 °C average daily high. Heat derating explains part of it; peak pre-monsoon dust plausibly explains the rest. June's residual returns to zero after the first rains washed the panels — a soiling signature.</div>
+<p class="fn">An earlier pass flagged March as an unexplained anomaly on climatological grounds. Fetching the actual irradiance overturned that: March 2026 received <em>less</em> sun than April. Most of its shortfall was weather. The residual is what survived normalisation. August covers 27 of 31 days; NASA POWER lags about two weeks.</p>
+
+<hr>
+<div class="part">PART THREE · THE LONGER RECORD</div>
+<h2>The sky is dimming, and it isn't clouds</h2>
+<p class="sub">Annual mean daily irradiance, 1984–2025. Upper line is what a cloud-free sky would have delivered; lower is what arrived.</p>
+<div class="cw"><canvas id="clim"></canvas></div>
+<div class="key d">Measured sunlight fell from <b>5.14</b> to <b>4.65</b> kWh/m²/day between the first and last decade — <b>−0.15 per decade</b> (<span class="sig">p &lt; 0.0001</span>, r² = 0.77).<br><br>
+The diagnostic: clearness index barely moved (0.80 throughout, p = 0.53) while <em>clear-sky</em> irradiance fell faster than measured (−0.18/decade, r² = 0.92). Had clouds been the cause, clearness would have dropped. Instead the cloud-free baseline itself declined — the atmosphere is less transparent on clear days. That is aerosols, and it matches published work attributing dimming over the eastern Indo-Gangetic Plain and eastern coastal regions to rising aerosol loading.</div>
+
+<hr>
+<h2>The clear seasons lost the most</h2>
+<div class="cw"><canvas id="seas"></canvas></div>
+<div class="sx"><table>
+<tr><th>Season</th><th>1984–93</th><th>2016–25</th><th>Per decade</th><th>Change</th></tr>
+<tr><td>Pre-monsoon (Mar–May)</td><td>6.55</td><td>5.84</td><td>−0.223</td><td class="neg">−10.8%</td></tr>
+<tr><td>Winter (Dec–Feb)</td><td>4.77</td><td>4.13</td><td>−0.195</td><td class="neg">−13.4%</td></tr>
+<tr><td>Post-monsoon (Oct–Nov)</td><td>4.88</td><td>4.38</td><td>−0.152</td><td class="neg">−10.2%</td></tr>
+<tr><td>Monsoon (Jun–Sep)</td><td>4.49</td><td>4.27</td><td>−0.063</td><td>−4.9%</td></tr>
+</table></div>
+<p class="fn">All significant at p &lt; 0.01, units kWh/m²/day. The monsoon was already dim and had less to lose; the clear months carried the decline — precisely the months a rooftop array earns most of its yield.</p>
+<div class="key r">One number I am flagging rather than reporting: this dataset shows days above 40 °C falling 36% and mean daily maxima declining 0.21 °C per decade. Indian station records show maxima <em>rising</em>, with the literature framing aerosols as partly masking warming rather than reversing it. Outright cooling is more likely a reanalysis artefact than a fact about this city. The irradiance trend is well corroborated; the temperature trend is not, and nothing here is built on it.</p>
+
+<hr>
+<div class="part">PART FOUR · WHAT COMES NEXT</div>
+<h2>The year ahead</h2>
+<p class="sub">Projection from the fitted sunlight-to-generation relationship, applied to expected monthly irradiance. Band is one standard deviation of the fit's residuals.</p>
+<div class="cw"><canvas id="fc"></canvas></div>
+<div class="stats">
+<div><b>4,327</b><span>kWh projected, Sep 26 – Aug 27</span></div>
+<div><b>4,043–4,613</b><span>band</span></div>
+<div class="pv"><b>4,850</b><span>kWh if the roof is painted white</span></div>
+</div>
+<p class="fn">September through January use regional seasonal irradiance rather than measurement, so those five months carry more uncertainty than the band shows. Refitting on twelve observed months will tighten this considerably. The projection assumes the array stays as clean and as shaded as it has been; it cannot see a dead string or a new shadow.</p>
+
+<hr>
+<h2>Over the asset's life</h2>
+<p class="sub">Panel warranty degradation combined with the extrapolated dimming trend.</p>
+<div class="cw"><canvas id="life"></canvas></div>
+<div class="sx"><table>
+<tr><th>Year</th><th>Age</th><th>Warranty floor</th><th>Irradiance</th><th>Combined</th><th>Expected</th></tr>
+<tr><td>2026</td><td>1</td><td>100%</td><td>100%</td><td>100%</td><td>4,321 kWh</td></tr>
+<tr><td>2031</td><td>6</td><td>97.5%</td><td>97.9%</td><td>95.5%</td><td>4,127 kWh</td></tr>
+<tr><td>2036</td><td>11</td><td>95.0%</td><td>95.9%</td><td>91.1%</td><td>3,936 kWh</td></tr>
+<tr><td>2041</td><td>16</td><td>92.5%</td><td>93.8%</td><td>86.8%</td><td>3,751 kWh</td></tr>
+<tr class="t"><td>2051</td><td>26</td><td>87.5%</td><td>89.7%</td><td>78.5%</td><td>3,393 kWh</td></tr>
+</table></div>
+<div class="key d">Dimming subtracts roughly <b>10%</b> on top of the <b>12.5%</b> panels lose to age — about <b>−21% by 2051</b> rather than the −12.5% a warranty-only calculation gives. Indian rooftop financial models that assume flat irradiance are optimistic by around eight percentage points across an asset life.<br><br>
+The honest limit: aerosols are a policy variable, not a physical constant. Europe and China both reversed their dimming within two decades of tightening air-quality rules. This is the trend-continues case, not a forecast.</div>
+
+<hr>
+<h2>Money</h2>
+<p class="sub">What was billed against what the array saved, valued at the slab the avoided units would have fallen into.</p>
+<div class="cw"><canvas id="money"></canvas></div>
+<p class="fn">Without the array June would have crossed ₹6,300. Across seven months the panels offset about ₹15,500 — roughly ₹2,210 a month.</p>
+
+<hr>
+<h2>What to do</h2>
+<ol class="act">
+<li><b>Paint the concrete under the array white.</b> These are bifacial modules over dark, often-wet concrete — the datasheet's rear-gain table runs 15–30% depending on ground reflectivity, and the current surface likely yields about 5%. Estimated +12% energy for ₹8–12k, payback near three years. Best value on the list, and it lifts any future panels too.</li>
+<li><b>Photograph the array at 08:30 and 16:30 on a clear day.</b> The water tank and vent pipe sit close to the first row. Two photos settle whether they cast a shadow; nothing in the bills can.</li>
+<li><b>Measure tilt with a phone inclinometer.</b> Tilt is currently an estimate of about 12°, which is the largest single uncertainty in every performance figure here.</li>
+<li><b>Log outage start and end times for one month.</b> Roughly 2–3 hours lost every alternate week, during which a grid-tied inverter shuts down regardless of sunlight. Turns an anecdote into a kWh number.</li>
+<li><b>Check the inverter's DC input rating before expanding.</b> It decides whether 4–4.5 kWp costs ₹47–60k or ₹100k. Expansion above 3 kW gets no further subsidy — PM Surya Ghar caps there.</li>
+<li><b>Skip batteries.</b> Net metering already banks surplus at full retail value. A 5 kWh system costs about ₹5 lakh against ₹3,500–4,000 a year of avoided import.</li>
+</ol>
+
+<hr>
+<h2>The data</h2>
+<div class="sx"><table>
+<tr><th>Period</th><th>Days</th><th>Gen</th><th>Import</th><th>Export</th><th>Demand</th><th>Sun</th><th>Rain</th><th>Tmax</th><th>Resid</th></tr>
+<tbody id="tb"></tbody></table></div>
+<p class="fn">Energy in kWh; sun in kWh/m²/day; rain in mm; Tmax mean daily high in °C. Every figure is a meter difference reconciled against cumulative readings across all seven bills — they tie out exactly.<br><br>
+The July bill's net-metering annexure printed export as 204.10 kWh, exactly double the meter's 102.05. The energy-charge slabs on that bill sum to 521 units, the correct figure — a print defect on the summary page, not a mis-billing.</p>
+
+<script>
+const D={"monthly":[{"month":"Feb","days":22,"gen":321.91,"imp":278.96,"exp":161.73,"self":160.18,"demand":439.14,"ghi":5.249,"rain":5.08,"raind":2,"tmax":32.673,"tmean":23.994,"cloud":13.706,"gen_day":14.632,"imp_day":12.68,"exp_day":7.351,"demand_day":19.961,"yield_":4.877,"cdd":16.91,"cdd_day":0.769,"resid":-3.3,"scr":49.8,"offset":73.3,"selfsuff":36.5,"saved":1838,"billed":859},{"month":"Mar","days":31,"gen":389.55,"imp":486.97,"exp":183.18,"self":206.37,"demand":693.34,"ghi":5.123,"rain":18.93,"raind":6,"tmax":36.759,"tmean":28.618,"cloud":33.043,"gen_day":12.566,"imp_day":15.709,"exp_day":5.909,"demand_day":22.366,"yield_":4.189,"cdd":143.17,"cdd_day":4.618,"resid":-9.6,"scr":53.0,"offset":56.2,"selfsuff":29.8,"saved":2431,"billed":1681},{"month":"Apr","days":30,"gen":436.34,"imp":719.64,"exp":192.42,"self":243.92,"demand":963.56,"ghi":5.577,"rain":75.21,"raind":11,"tmax":40.456,"tmean":31.968,"cloud":46.147,"gen_day":14.545,"imp_day":23.988,"exp_day":6.414,"demand_day":32.119,"yield_":4.848,"cdd":239.05,"cdd_day":7.968,"resid":0.0,"scr":55.9,"offset":45.3,"selfsuff":25.3,"saved":2768,"billed":3022},{"month":"May","days":31,"gen":436.53,"imp":598.4,"exp":192.63,"self":243.9,"demand":842.3,"ghi":6.158,"rain":58.75,"raind":13,"tmax":39.301,"tmean":32.276,"cloud":53.643,"gen_day":14.082,"imp_day":19.303,"exp_day":6.214,"demand_day":27.171,"yield_":4.694,"cdd":256.56,"cdd_day":8.276,"resid":-10.5,"scr":55.9,"offset":51.8,"selfsuff":29.0,"saved":2769,"billed":2241},{"month":"Jun","days":30,"gen":364.67,"imp":794.94,"exp":111.97,"self":252.7,"demand":1047.64,"ghi":4.759,"rain":161.71,"raind":21,"tmax":36.352,"tmean":31.511,"cloud":NaN,"gen_day":12.156,"imp_day":26.498,"exp_day":3.732,"demand_day":34.921,"yield_":4.052,"cdd":225.34,"cdd_day":7.511,"resid":0.0,"scr":69.3,"offset":34.8,"selfsuff":24.1,"saved":2313,"billed":4025},{"month":"Jul","days":31,"gen":268.76,"imp":623.31,"exp":102.05,"self":166.71,"demand":790.02,"ghi":3.084,"rain":569.14,"raind":27,"tmax":30.787,"tmean":28.073,"cloud":NaN,"gen_day":8.67,"imp_day":20.107,"exp_day":3.292,"demand_day":25.485,"yield_":2.89,"cdd":126.26,"cdd_day":4.073,"resid":7.5,"scr":62.0,"offset":34.0,"selfsuff":21.1,"saved":1705,"billed":2997},{"month":"Aug","days":31,"gen":263.5,"imp":541.25,"exp":98.65,"self":164.85,"demand":706.1,"ghi":3.083,"rain":374.95,"raind":28,"tmax":30.569,"tmean":27.882,"cloud":NaN,"gen_day":8.5,"imp_day":17.46,"exp_day":3.182,"demand_day":22.777,"yield_":2.833,"cdd":112.59,"cdd_day":3.632,"resid":4.9,"scr":62.6,"offset":37.3,"selfsuff":23.3,"saved":1672,"billed":2496}],"daily":[{"d":"2026-02-08","g":5.64,"r":0.0},{"d":"2026-02-09","g":5.42,"r":0.0},{"d":"2026-02-10","g":5.33,"r":0.0},{"d":"2026-02-11","g":5.21,"r":0.0},{"d":"2026-02-12","g":5.2,"r":0.0},{"d":"2026-02-13","g":5.29,"r":0.0},{"d":"2026-02-14","g":5.25,"r":0.0},{"d":"2026-02-15","g":5.15,"r":0.0},{"d":"2026-02-16","g":5.03,"r":0.0},{"d":"2026-02-17","g":5.18,"r":0.0},{"d":"2026-02-18","g":5.57,"r":0.0},{"d":"2026-02-19","g":4.71,"r":0.0},{"d":"2026-02-20","g":5.59,"r":0.0},{"d":"2026-02-21","g":5.15,"r":0.0},{"d":"2026-02-22","g":4.93,"r":0.0},{"d":"2026-02-23","g":4.98,"r":0.0},{"d":"2026-02-24","g":3.99,"r":1.8},{"d":"2026-02-25","g":4.28,"r":3.2},{"d":"2026-02-26","g":5.26,"r":0.0},{"d":"2026-02-27","g":5.81,"r":0.0},{"d":"2026-02-28","g":5.88,"r":0.0},{"d":"2026-03-01","g":6.65,"r":0.0},{"d":"2026-03-02","g":6.35,"r":0.0},{"d":"2026-03-03","g":6.19,"r":0.0},{"d":"2026-03-04","g":5.8,"r":0.0},{"d":"2026-03-05","g":5.61,"r":0.0},{"d":"2026-03-06","g":5.0,"r":0.0},{"d":"2026-03-07","g":3.79,"r":0.0},{"d":"2026-03-08","g":3.94,"r":0.0},{"d":"2026-03-09","g":3.87,"r":0.0},{"d":"2026-03-10","g":3.82,"r":0.0},{"d":"2026-03-11","g":4.53,"r":0.0},{"d":"2026-03-12","g":5.2,"r":0.1},{"d":"2026-03-13","g":5.43,"r":0.1},{"d":"2026-03-14","g":5.13,"r":0.1},{"d":"2026-03-15","g":4.5,"r":0.9},{"d":"2026-03-16","g":3.44,"r":3.8},{"d":"2026-03-17","g":4.65,"r":1.0},{"d":"2026-03-18","g":5.2,"r":0.2},{"d":"2026-03-19","g":4.63,"r":0.1},{"d":"2026-03-20","g":5.26,"r":0.7},{"d":"2026-03-21","g":6.0,"r":3.3},{"d":"2026-03-22","g":5.56,"r":0.1},{"d":"2026-03-23","g":6.25,"r":0.0},{"d":"2026-03-24","g":5.82,"r":0.1},{"d":"2026-03-25","g":4.78,"r":0.2},{"d":"2026-03-26","g":4.9,"r":1.1},{"d":"2026-03-27","g":5.72,"r":2.4},{"d":"2026-03-28","g":5.88,"r":1.9},{"d":"2026-03-29","g":5.99,"r":0.1},{"d":"2026-03-30","g":5.32,"r":0.1},{"d":"2026-03-31","g":2.9,"r":0.8},{"d":"2026-04-01","g":7.35,"r":2.0},{"d":"2026-04-02","g":7.02,"r":0.0},{"d":"2026-04-03","g":5.64,"r":0.1},{"d":"2026-04-04","g":4.66,"r":1.1},{"d":"2026-04-05","g":3.47,"r":2.4},{"d":"2026-04-06","g":4.28,"r":5.4},{"d":"2026-04-07","g":4.88,"r":5.2},{"d":"2026-04-08","g":5.08,"r":5.0},{"d":"2026-04-09","g":4.74,"r":9.1},{"d":"2026-04-10","g":5.15,"r":0.6},{"d":"2026-04-11","g":6.23,"r":0.7},{"d":"2026-04-12","g":6.87,"r":0.0},{"d":"2026-04-13","g":6.57,"r":0.0},{"d":"2026-04-14","g":5.51,"r":0.0},{"d":"2026-04-15","g":5.47,"r":0.0},{"d":"2026-04-16","g":5.84,"r":0.1},{"d":"2026-04-17","g":5.53,"r":0.3},{"d":"2026-04-18","g":5.62,"r":0.1},{"d":"2026-04-19","g":5.43,"r":0.9},{"d":"2026-04-20","g":5.32,"r":1.6},{"d":"2026-04-21","g":5.25,"r":0.5},{"d":"2026-04-22","g":6.07,"r":0.0},{"d":"2026-04-23","g":6.37,"r":0.0},{"d":"2026-04-24","g":5.87,"r":0.0},{"d":"2026-04-25","g":5.44,"r":0.0},{"d":"2026-04-26","g":5.66,"r":0.2},{"d":"2026-04-27","g":5.8,"r":0.2},{"d":"2026-04-28","g":4.18,"r":1.2},{"d":"2026-04-29","g":6.21,"r":3.0},{"d":"2026-04-30","g":5.91,"r":16.9},{"d":"2026-05-01","g":7.24,"r":20.6},{"d":"2026-05-02","g":7.1,"r":1.3},{"d":"2026-05-03","g":3.81,"r":4.8},{"d":"2026-05-04","g":6.93,"r":0.5},{"d":"2026-05-05","g":4.92,"r":9.3},{"d":"2026-05-06","g":6.66,"r":1.1},{"d":"2026-05-07","g":6.7,"r":0.7},{"d":"2026-05-08","g":6.97,"r":2.1},{"d":"2026-05-09","g":6.81,"r":0.3},{"d":"2026-05-10","g":6.07,"r":0.8},{"d":"2026-05-11","g":6.83,"r":0.6},{"d":"2026-05-12","g":6.02,"r":1.2},{"d":"2026-05-13","g":6.84,"r":1.6},{"d":"2026-05-14","g":6.92,"r":4.0},{"d":"2026-05-15","g":6.72,"r":0.2},{"d":"2026-05-16","g":6.66,"r":0.1},{"d":"2026-05-17","g":6.53,"r":0.4},{"d":"2026-05-18","g":6.33,"r":0.1},{"d":"2026-05-19","g":6.46,"r":0.6},{"d":"2026-05-20","g":5.77,"r":0.8},{"d":"2026-05-21","g":5.63,"r":0.1},{"d":"2026-05-22","g":4.82,"r":0.5},{"d":"2026-05-23","g":5.79,"r":0.5},{"d":"2026-05-24","g":6.3,"r":0.8},{"d":"2026-05-25","g":6.44,"r":0.1},{"d":"2026-05-26","g":5.09,"r":0.2},{"d":"2026-05-27","g":5.67,"r":2.7},{"d":"2026-05-28","g":6.71,"r":8.5},{"d":"2026-05-29","g":5.41,"r":5.5},{"d":"2026-05-30","g":5.65,"r":7.1},{"d":"2026-05-31","g":6.22,"r":2.0},{"d":"2026-06-01","g":6.13,"r":0.0},{"d":"2026-06-02","g":5.43,"r":1.0},{"d":"2026-06-03","g":5.62,"r":0.5},{"d":"2026-06-04","g":5.14,"r":0.5},{"d":"2026-06-05","g":6.43,"r":1.4},{"d":"2026-06-06","g":6.27,"r":3.4},{"d":"2026-06-07","g":6.17,"r":6.5},{"d":"2026-06-08","g":5.86,"r":9.1},{"d":"2026-06-09","g":3.91,"r":1.8},{"d":"2026-06-10","g":2.97,"r":0.6},{"d":"2026-06-11","g":6.09,"r":1.9},{"d":"2026-06-12","g":5.43,"r":1.5},{"d":"2026-06-13","g":6.0,"r":2.7},{"d":"2026-06-14","g":5.64,"r":3.3},{"d":"2026-06-15","g":5.69,"r":3.8},{"d":"2026-06-16","g":6.07,"r":0.5},{"d":"2026-06-17","g":5.87,"r":1.4},{"d":"2026-06-18","g":5.54,"r":4.8},{"d":"2026-06-19","g":5.09,"r":29.7},{"d":"2026-06-20","g":4.13,"r":6.2},{"d":"2026-06-21","g":3.09,"r":2.3},{"d":"2026-06-22","g":0.66,"r":3.4},{"d":"2026-06-23","g":3.07,"r":0.5},{"d":"2026-06-24","g":6.38,"r":0.1},{"d":"2026-06-25","g":4.43,"r":0.5},{"d":"2026-06-26","g":5.84,"r":1.9},{"d":"2026-06-27","g":4.1,"r":0.4},{"d":"2026-06-28","g":5.75,"r":1.2},{"d":"2026-06-29","g":2.0,"r":23.0},{"d":"2026-06-30","g":1.01,"r":15.9},{"d":"2026-07-01","g":3.07,"r":31.8},{"d":"2026-07-02","g":1.46,"r":27.8},{"d":"2026-07-03","g":1.52,"r":41.7},{"d":"2026-07-04","g":0.39,"r":36.0},{"d":"2026-07-05","g":0.8,"r":48.0},{"d":"2026-07-06","g":3.21,"r":14.3},{"d":"2026-07-07","g":4.15,"r":0.8},{"d":"2026-07-08","g":4.83,"r":0.3},{"d":"2026-07-09","g":1.46,"r":1.0},{"d":"2026-07-10","g":3.42,"r":8.8},{"d":"2026-07-11","g":4.89,"r":3.8},{"d":"2026-07-12","g":5.61,"r":0.3},{"d":"2026-07-13","g":5.07,"r":5.9},{"d":"2026-07-14","g":0.92,"r":30.9},{"d":"2026-07-15","g":2.33,"r":69.0},{"d":"2026-07-16","g":2.14,"r":28.5},{"d":"2026-07-17","g":2.08,"r":12.8},{"d":"2026-07-18","g":1.88,"r":9.6},{"d":"2026-07-19","g":4.94,"r":1.9},{"d":"2026-07-20","g":2.53,"r":9.3},{"d":"2026-07-21","g":3.1,"r":25.4},{"d":"2026-07-22","g":2.91,"r":14.3},{"d":"2026-07-23","g":3.56,"r":6.9},{"d":"2026-07-24","g":3.84,"r":6.6},{"d":"2026-07-25","g":0.96,"r":37.1},{"d":"2026-07-26","g":2.9,"r":21.9},{"d":"2026-07-27","g":3.4,"r":23.3},{"d":"2026-07-28","g":1.31,"r":51.8},{"d":"2026-07-29","g":5.64,"r":21.1},{"d":"2026-07-30","g":4.57,"r":2.4},{"d":"2026-07-31","g":5.24,"r":1.3},{"d":"2026-08-01","g":4.53,"r":6.4},{"d":"2026-08-02","g":3.13,"r":7.4},{"d":"2026-08-03","g":4.77,"r":10.2},{"d":"2026-08-04","g":4.58,"r":11.7},{"d":"2026-08-05","g":3.87,"r":47.1},{"d":"2026-08-06","g":3.95,"r":9.2},{"d":"2026-08-07","g":2.9,"r":5.5},{"d":"2026-08-08","g":4.5,"r":8.3},{"d":"2026-08-09","g":1.4,"r":10.8},{"d":"2026-08-10","g":3.18,"r":62.0},{"d":"2026-08-11","g":4.26,"r":1.0},{"d":"2026-08-12","g":1.88,"r":2.9},{"d":"2026-08-13","g":2.71,"r":8.5},{"d":"2026-08-14","g":1.85,"r":10.5},{"d":"2026-08-15","g":1.31,"r":11.4},{"d":"2026-08-16","g":1.07,"r":15.6},{"d":"2026-08-17","g":1.98,"r":6.0},{"d":"2026-08-18","g":1.71,"r":3.1},{"d":"2026-08-19","g":4.74,"r":5.9},{"d":"2026-08-20","g":5.17,"r":3.7},{"d":"2026-08-21","g":2.77,"r":4.3},{"d":"2026-08-22","g":1.56,"r":10.9},{"d":"2026-08-23","g":2.25,"r":20.4},{"d":"2026-08-24","g":3.49,"r":36.1},{"d":"2026-08-25","g":3.47,"r":5.9},{"d":"2026-08-26","g":2.88,"r":5.0},{"d":"2026-08-27","g":4.18,"r":7.5},{"d":"2026-08-28","g":3.66,"r":8.3},{"d":"2026-08-29","g":null,"r":8.3},{"d":"2026-08-30","g":null,"r":27.4},{"d":"2026-08-31","g":null,"r":null},{"d":"2026-09-01","g":null,"r":null}],"fc":[{"month":"Sep","ghi":3.9,"days":30,"gen":314,"lo":290,"hi":337},{"month":"Oct","ghi":4.6,"days":31,"gen":369,"lo":345,"hi":394},{"month":"Nov","ghi":4.5,"days":30,"gen":351,"lo":328,"hi":375},{"month":"Dec","ghi":4.3,"days":31,"gen":350,"lo":326,"hi":374},{"month":"Jan","ghi":4.6,"days":31,"gen":369,"lo":345,"hi":394},{"month":"Feb","ghi":5.25,"days":28,"gen":372,"lo":350,"hi":394},{"month":"Mar","ghi":5.12,"days":31,"gen":403,"lo":379,"hi":427},{"month":"Apr","ghi":5.58,"days":30,"gen":419,"lo":396,"hi":442},{"month":"May","ghi":6.16,"days":31,"gen":470,"lo":446,"hi":495},{"month":"Jun","ghi":4.76,"days":30,"gen":368,"lo":344,"hi":391},{"month":"Jul","ghi":3.08,"days":31,"gen":271,"lo":247,"hi":295},{"month":"Aug","ghi":3.08,"days":31,"gen":271,"lo":247,"hi":295}],"ann":[{"year":1984,"ghi":4.9573,"clr":6.3387,"rain":1794.39,"tmean":26.5859,"tmax":32.9535,"rh":67.874,"kt":0.7821,"raindays":111,"hot40":67,"heavy":6},{"year":1985,"ghi":5.3203,"clr":6.5406,"rain":1484.67,"tmean":26.7435,"tmax":33.0598,"rh":69.2903,"kt":0.8134,"raindays":141,"hot40":76,"heavy":4},{"year":1986,"ghi":5.2441,"clr":6.483,"rain":1566.95,"tmean":26.3825,"tmax":32.2567,"rh":72.0411,"kt":0.8089,"raindays":132,"hot40":54,"heavy":5},{"year":1987,"ghi":5.1834,"clr":6.4036,"rain":904.3,"tmean":27.0494,"tmax":33.4576,"rh":66.8892,"kt":0.8094,"raindays":112,"hot40":50,"heavy":0},{"year":1988,"ghi":5.1413,"clr":6.392,"rain":1284.36,"tmean":27.0072,"tmax":33.107,"rh":69.3349,"kt":0.8043,"raindays":128,"hot40":50,"heavy":2},{"year":1989,"ghi":5.2158,"clr":6.3968,"rain":1195.59,"tmean":26.5339,"tmax":32.9034,"rh":67.8136,"kt":0.8154,"raindays":116,"hot40":53,"heavy":2},{"year":1990,"ghi":4.9982,"clr":6.3994,"rain":1843.58,"tmean":26.2625,"tmax":31.7991,"rh":74.5664,"kt":0.781,"raindays":171,"hot40":20,"heavy":5},{"year":1991,"ghi":5.0291,"clr":6.3858,"rain":1361.47,"tmean":26.7237,"tmax":32.5713,"rh":72.2434,"kt":0.7875,"raindays":113,"hot40":68,"heavy":5},{"year":1992,"ghi":5.1817,"clr":6.3676,"rain":1638.85,"tmean":26.0876,"tmax":32.1297,"rh":72.2754,"kt":0.8138,"raindays":124,"hot40":59,"heavy":3},{"year":1993,"ghi":5.1323,"clr":6.3747,"rain":1626.15,"tmean":26.4608,"tmax":32.5947,"rh":70.7724,"kt":0.8051,"raindays":136,"hot40":51,"heavy":6},{"year":1994,"ghi":5.078,"clr":6.4635,"rain":1584.24,"tmean":26.5399,"tmax":32.4801,"rh":71.1465,"kt":0.7856,"raindays":128,"hot40":63,"heavy":2},{"year":1995,"ghi":4.8947,"clr":6.3381,"rain":1719.88,"tmean":25.8801,"tmax":31.1867,"rh":76.0715,"kt":0.7723,"raindays":148,"hot40":28,"heavy":6},{"year":1996,"ghi":5.105,"clr":6.2578,"rain":1012.61,"tmean":26.4459,"tmax":32.377,"rh":70.8335,"kt":0.8158,"raindays":120,"hot40":50,"heavy":1},{"year":1997,"ghi":4.9707,"clr":6.19,"rain":1508.87,"tmean":26.7577,"tmax":32.548,"rh":70.9785,"kt":0.803,"raindays":142,"hot40":45,"heavy":5},{"year":1998,"ghi":5.0004,"clr":6.1958,"rain":1487.76,"tmean":26.8488,"tmax":32.4005,"rh":73.6489,"kt":0.8071,"raindays":150,"hot40":59,"heavy":0},{"year":1999,"ghi":5.0808,"clr":6.3256,"rain":1304.31,"tmean":26.2043,"tmax":32.0889,"rh":72.9884,"kt":0.8032,"raindays":131,"hot40":58,"heavy":0},{"year":2000,"ghi":5.2033,"clr":6.2304,"rain":1100.2,"tmean":26.3463,"tmax":32.3902,"rh":71.2092,"kt":0.8351,"raindays":120,"hot40":36,"heavy":1},{"year":2001,"ghi":4.7616,"clr":6.1282,"rain":1946.22,"tmean":26.482,"tmax":32.1654,"rh":72.6209,"kt":0.777,"raindays":157,"hot40":40,"heavy":7},{"year":2002,"ghi":5.0558,"clr":6.069,"rain":1340.28,"tmean":26.5112,"tmax":32.3501,"rh":73.1201,"kt":0.8331,"raindays":126,"hot40":54,"heavy":2},{"year":2003,"ghi":4.804,"clr":6.1269,"rain":1857.72,"tmean":26.5694,"tmax":32.2156,"rh":73.5278,"kt":0.7841,"raindays":155,"hot40":51,"heavy":5},{"year":2004,"ghi":5.0676,"clr":6.1181,"rain":1134.49,"tmean":26.1314,"tmax":31.8701,"rh":71.9813,"kt":0.8283,"raindays":116,"hot40":45,"heavy":1},{"year":2005,"ghi":4.8905,"clr":6.1072,"rain":1639.58,"tmean":26.6773,"tmax":32.4071,"rh":71.948,"kt":0.8008,"raindays":139,"hot40":50,"heavy":5},{"year":2006,"ghi":4.9458,"clr":6.0877,"rain":1755.76,"tmean":26.1061,"tmax":31.5954,"rh":73.826,"kt":0.8124,"raindays":130,"hot40":34,"heavy":8},{"year":2007,"ghi":4.9469,"clr":6.0544,"rain":1650.41,"tmean":26.1788,"tmax":31.7783,"rh":73.9249,"kt":0.8171,"raindays":136,"hot40":36,"heavy":5},{"year":2008,"ghi":4.778,"clr":5.9592,"rain":1798.14,"tmean":25.9797,"tmax":31.4195,"rh":75.1281,"kt":0.8018,"raindays":141,"hot40":28,"heavy":5},{"year":2009,"ghi":4.9139,"clr":5.9624,"rain":1327.64,"tmean":27.04,"tmax":32.9539,"rh":69.7305,"kt":0.8242,"raindays":108,"hot40":55,"heavy":2},{"year":2010,"ghi":4.8787,"clr":6.011,"rain":1457.71,"tmean":26.9418,"tmax":32.6862,"rh":72.4185,"kt":0.8116,"raindays":132,"hot40":58,"heavy":2},{"year":2011,"ghi":4.8612,"clr":5.9134,"rain":1571.55,"tmean":26.0769,"tmax":31.7025,"rh":73.3272,"kt":0.8221,"raindays":136,"hot40":17,"heavy":3},{"year":2012,"ghi":4.8203,"clr":5.9757,"rain":1398.23,"tmean":26.5548,"tmax":32.492,"rh":70.8684,"kt":0.8066,"raindays":134,"hot40":57,"heavy":3},{"year":2013,"ghi":4.8137,"clr":5.9914,"rain":1678.58,"tmean":26.4066,"tmax":32.2048,"rh":71.5561,"kt":0.8034,"raindays":137,"hot40":50,"heavy":6},{"year":2014,"ghi":4.7611,"clr":5.8772,"rain":1552.0,"tmean":26.2141,"tmax":31.8229,"rh":72.5193,"kt":0.8101,"raindays":124,"hot40":53,"heavy":4},{"year":2015,"ghi":4.7856,"clr":5.844,"rain":1135.26,"tmean":26.5729,"tmax":32.3102,"rh":71.2016,"kt":0.8189,"raindays":148,"hot40":21,"heavy":0},{"year":2016,"ghi":4.726,"clr":5.8853,"rain":1431.86,"tmean":26.8011,"tmax":32.693,"rh":71.5695,"kt":0.803,"raindays":156,"hot40":52,"heavy":1},{"year":2017,"ghi":4.7623,"clr":5.9276,"rain":1673.82,"tmean":26.5222,"tmax":32.2424,"rh":73.5039,"kt":0.8034,"raindays":152,"hot40":45,"heavy":4},{"year":2018,"ghi":4.7242,"clr":5.8094,"rain":1803.55,"tmean":25.8855,"tmax":31.5234,"rh":73.2567,"kt":0.8132,"raindays":145,"hot40":24,"heavy":6},{"year":2019,"ghi":4.716,"clr":5.866,"rain":1686.78,"tmean":26.4201,"tmax":32.0871,"rh":74.0602,"kt":0.804,"raindays":150,"hot40":45,"heavy":3},{"year":2020,"ghi":4.6914,"clr":5.9436,"rain":1633.35,"tmean":25.711,"tmax":30.9386,"rh":76.6963,"kt":0.7893,"raindays":165,"hot40":15,"heavy":4},{"year":2021,"ghi":4.5364,"clr":5.7999,"rain":1691.46,"tmean":26.3822,"tmax":31.7066,"rh":74.0148,"kt":0.7821,"raindays":172,"hot40":29,"heavy":4},{"year":2022,"ghi":4.7362,"clr":5.9158,"rain":1381.65,"tmean":26.0634,"tmax":31.6278,"rh":74.3753,"kt":0.8006,"raindays":136,"hot40":34,"heavy":1},{"year":2023,"ghi":4.6144,"clr":5.7982,"rain":1351.29,"tmean":26.732,"tmax":32.5669,"rh":69.9874,"kt":0.7958,"raindays":150,"hot40":44,"heavy":3},{"year":2024,"ghi":4.3927,"clr":5.7557,"rain":1483.51,"tmean":26.9596,"tmax":32.4522,"rh":72.6594,"kt":0.7632,"raindays":170,"hot40":41,"heavy":1},{"year":2025,"ghi":4.5695,"clr":5.8428,"rain":1417.08,"tmean":25.9782,"tmax":31.4722,"rh":75.3639,"kt":0.7821,"raindays":178,"hot40":20,"heavy":0}],"seas":{"winter":{"1984":4.341,"1985":4.878,"1986":4.652,"1987":4.869,"1988":4.811,"1989":4.915,"1990":4.764,"1991":4.718,"1992":4.822,"1993":4.884,"1994":4.743,"1995":4.591,"1996":4.516,"1997":4.37,"1998":4.409,"1999":5.047,"2000":4.634,"2001":4.656,"2002":4.539,"2003":4.355,"2004":4.55,"2005":4.481,"2006":4.747,"2007":4.396,"2008":4.234,"2009":4.425,"2010":4.303,"2011":4.343,"2012":4.467,"2013":4.358,"2014":4.304,"2015":4.129,"2016":4.164,"2017":4.39,"2018":4.368,"2019":4.193,"2020":4.008,"2021":4.071,"2022":4.21,"2023":4.191,"2024":3.599,"2025":4.059},"pre":{"1984":6.566,"1985":6.869,"1986":6.771,"1987":6.421,"1988":6.411,"1989":6.398,"1990":6.26,"1991":6.607,"1992":6.542,"1993":6.632,"1994":6.652,"1995":6.199,"1996":6.418,"1997":6.348,"1998":6.442,"1999":6.39,"2000":6.534,"2001":5.984,"2002":6.435,"2003":6.16,"2004":6.39,"2005":6.254,"2006":6.058,"2007":6.31,"2008":6.09,"2009":6.12,"2010":6.101,"2011":6.075,"2012":6.15,"2013":6.067,"2014":5.933,"2015":5.984,"2016":5.862,"2017":6.108,"2018":5.898,"2019":6.084,"2020":5.854,"2021":5.639,"2022":5.946,"2023":5.527,"2024":5.575,"2025":5.897},"mon":{"1984":4.18,"1985":4.594,"1986":4.724,"1987":4.736,"1988":4.437,"1989":4.524,"1990":4.467,"1991":4.354,"1992":4.606,"1993":4.234,"1994":4.276,"1995":4.407,"1996":4.683,"1997":4.431,"1998":4.656,"1999":4.352,"2000":4.722,"2001":4.078,"2002":4.533,"2003":4.339,"2004":4.619,"2005":4.455,"2006":4.393,"2007":4.324,"2008":4.211,"2009":4.523,"2010":4.761,"2011":4.341,"2012":4.279,"2013":4.516,"2014":4.354,"2015":4.505,"2016":4.341,"2017":4.248,"2018":4.167,"2019":4.289,"2020":4.561,"2021":4.275,"2022":4.322,"2023":4.347,"2024":4.118,"2025":4.015},"post":{"1984":5.006,"1985":5.088,"1986":4.855,"1987":4.675,"1988":5.129,"1989":5.262,"1990":4.503,"1991":4.458,"1992":4.817,"1993":5.033,"1994":4.802,"1995":4.351,"1996":4.847,"1997":4.859,"1998":4.388,"1999":4.612,"2000":5.008,"2001":4.441,"2002":4.784,"2003":4.353,"2004":4.742,"2005":4.308,"2006":4.667,"2007":4.948,"2008":4.745,"2009":4.599,"2010":4.12,"2011":4.836,"2012":4.425,"2013":4.191,"2014":4.482,"2015":4.508,"2016":4.62,"2017":4.312,"2018":4.594,"2019":4.279,"2020":4.219,"2021":4.084,"2022":4.518,"2023":4.398,"2024":4.343,"2025":4.431}},"proj":{"2026":4.546,"2027":4.528,"2028":4.509,"2029":4.49,"2030":4.472,"2031":4.453,"2032":4.435,"2033":4.416,"2034":4.397,"2035":4.379,"2036":4.36,"2037":4.341,"2038":4.323,"2039":4.304,"2040":4.285,"2041":4.267,"2042":4.248,"2043":4.229,"2044":4.211,"2045":4.192,"2046":4.173,"2047":4.155,"2048":4.136,"2049":4.117,"2050":4.099}};
+const M=D.monthly, DA=D.daily, FC=D.fc, AN=D.ann, SE=D.seas, PR=D.proj;
+Chart.defaults.color='#6C7780';Chart.defaults.borderColor='#E9E6DE';
+Chart.defaults.font.family='ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+Chart.defaults.font.size=11;
+const SUN='#C3821F',DIM='#9A5B3D',RAIN='#3D6B8A',PV='#2B6350',INK='#1F262B';
+const L=M.map(r=>r.month);
+const B={responsive:true,maintainAspectRatio:false,
+ plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12}}},
+ scales:{x:{grid:{display:false}}}};
+const fit=(xs,ys)=>{const n=xs.length,sx=xs.reduce((a,b)=>a+b,0),sy=ys.reduce((a,b)=>a+b,0),
+ sxy=xs.reduce((a,x,i)=>a+x*ys[i],0),sxx=xs.reduce((a,x)=>a+x*x,0);
+ const m=(n*sxy-sx*sy)/(n*sxx-sx*sx),c=(sy-m*sx)/n;return xs.map(x=>m*x+c)};
+
+// hero
+const dd=DA.map(r=>r.d), gh=DA.map(r=>r.g), rn=DA.map(r=>r.r==null?null:-r.r);
+const per=[["2026-02-08","2026-03-01"],["2026-03-02","2026-04-01"],["2026-04-02","2026-05-01"],
+["2026-05-02","2026-06-01"],["2026-06-02","2026-07-01"],["2026-07-02","2026-08-01"],["2026-08-02","2026-09-01"]];
+const mid=per.map(([s,e])=>Math.round((dd.indexOf(s)+dd.indexOf(e))/2));
+const gpt=dd.map((_,i)=>{const k=mid.indexOf(i);return k<0?null:M[k].gen});
+new Chart(hero,{type:'bar',data:{labels:dd,datasets:[
+ {type:'line',label:'Sun',data:gh,borderColor:SUN,backgroundColor:'rgba(195,130,31,.22)',fill:'origin',borderWidth:1.2,pointRadius:0,tension:.25,spanGaps:true,yAxisID:'y'},
+ {type:'bar',label:'Rain',data:rn,backgroundColor:RAIN,barPercentage:1,categoryPercentage:1,yAxisID:'y'},
+ {type:'line',label:'Gen',data:gpt,borderColor:PV,backgroundColor:PV,pointRadius:5,showLine:false,yAxisID:'y2'}]},
+ options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+ plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const v=c.raw;if(v==null)return null;
+  if(c.dataset.label==='Rain')return 'Rain '+(-v).toFixed(1)+' mm';
+  if(c.dataset.label==='Sun')return 'Sun '+v.toFixed(2)+' kWh/m²';
+  return 'Generated '+v.toFixed(0)+' kWh this period'}}}},
+ scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,autoSkip:false,
+  callback:(v,i)=>dd[i].endsWith('-01')?new Date(dd[i]).toLocaleString('en',{month:'short'}):''}},
+ y:{min:-60,max:8,grid:{color:c=>c.tick.value===0?'#1F262B':'#E9E6DE'},ticks:{callback:v=>v<0?'':v}},
+ y2:{position:'right',min:0,max:500,grid:{display:false},ticks:{color:PV}}}}});
+
+new Chart(bal,{type:'bar',data:{labels:L,datasets:[
+ {label:'Met by solar',data:M.map(r=>r.self),backgroundColor:PV,stack:'a',borderRadius:3},
+ {label:'Bought from grid',data:M.map(r=>r.imp),backgroundColor:'rgba(61,107,138,.34)',borderColor:RAIN,borderWidth:1,stack:'a',borderRadius:3},
+ {label:'Exported',data:M.map(r=>r.exp),backgroundColor:'rgba(195,130,31,.30)',borderColor:SUN,borderWidth:1,stack:'b',borderRadius:3}]},
+ options:{...B,scales:{...B.scales,y:{stacked:true,title:{display:true,text:'kWh'}}}}});
+
+new Chart(scr,{type:'line',data:{labels:L,datasets:[
+ {label:'Self-consumption %',data:M.map(r=>r.scr),borderColor:PV,backgroundColor:'rgba(43,99,80,.14)',fill:true,tension:.3,pointRadius:4,borderWidth:2.5}]},
+ options:{...B,plugins:{legend:{display:false}},scales:{...B.scales,y:{min:40,max:80,title:{display:true,text:'%'}}}}});
+
+new Chart(suff,{type:'line',data:{labels:L,datasets:[
+ {label:'Bill offset',data:M.map(r=>r.offset),borderColor:SUN,tension:.3,pointRadius:4,borderWidth:2.5},
+ {label:'Self-sufficiency',data:M.map(r=>r.selfsuff),borderColor:RAIN,tension:.3,pointRadius:4,borderWidth:2,borderDash:[5,4]}]},
+ options:{...B,scales:{...B.scales,y:{min:0,max:80,title:{display:true,text:'%'}}}}});
+
+new Chart(ghigen,{data:{labels:L,datasets:[
+ {type:'line',label:'Sunlight (kWh/m²/day)',data:M.map(r=>+r.ghi.toFixed(2)),borderColor:SUN,backgroundColor:SUN,yAxisID:'y',tension:.3,pointRadius:4,borderWidth:2.5},
+ {type:'line',label:'Generation (kWh/day)',data:M.map(r=>+r.gen_day.toFixed(2)),borderColor:PV,backgroundColor:PV,yAxisID:'y2',tension:.3,pointRadius:4,borderWidth:2.5,borderDash:[5,4]}]},
+ options:{...B,scales:{...B.scales,y:{min:2,max:7,title:{display:true,text:'kWh/m²/day'},ticks:{color:SUN}},
+ y2:{position:'right',min:6,max:16,grid:{display:false},title:{display:true,text:'kWh/day'},ticks:{color:PV}}}}});
+
+const CR=[['Sunlight → generation',.955],['Demand → import',.978],['Generation → export',.913],
+['Rain → generation',-.911],['Sunlight → export',.839],['Cooling degrees → import',.800],
+['Tmax → generation',.751],['Tmax → import',.432],['Cloud → generation',-.055]];
+corr.innerHTML=CR.map(([n,v])=>`<div class="rbar"><i>${n}</i><u style="width:${Math.abs(v)*50}%;background:${v<0?RAIN:PV}"></u><b>${v>0?'+':''}${v.toFixed(2)}</b></div>`).join('');
+
+new Chart(resid,{type:'bar',data:{labels:L,datasets:[{data:M.map(r=>r.resid),
+ backgroundColor:M.map(r=>r.resid<-5?DIM:r.resid<0?'rgba(154,91,61,.45)':'rgba(43,99,80,.55)'),borderRadius:3}]},
+ options:{...B,plugins:{legend:{display:false}},scales:{...B.scales,
+ y:{min:-14,max:10,title:{display:true,text:'residual %'},grid:{color:c=>c.tick.value===0?'#1F262B':'#E9E6DE'}}}}});
+
+const EXP={Feb:333,Mar:431,Apr:436,May:488,Jun:365,Jul:250,Aug:251};
+document.getElementById('tres').innerHTML=M.map(r=>`<tr><td>${r.month}</td><td>${r.ghi.toFixed(2)}</td><td>${(r.gen/3/r.days).toFixed(2)}</td><td>${EXP[r.month]}</td><td>${r.gen.toFixed(0)}</td><td class="${r.resid<-5?'neg':''}">${r.resid>0?'+':''}${r.resid.toFixed(1)}%</td></tr>`).join('');
+
+const yrs=AN.map(r=>r.year);
+new Chart(clim,{type:'line',data:{labels:yrs,datasets:[
+ {label:'Clear-sky sunlight',data:AN.map(r=>r.clr),borderColor:SUN,borderWidth:1.5,pointRadius:0,tension:.25},
+ {label:'t1',data:fit(yrs,AN.map(r=>r.clr)),borderColor:SUN,borderWidth:2.5,pointRadius:0,borderDash:[6,3]},
+ {label:'Measured sunlight',data:AN.map(r=>r.ghi),borderColor:DIM,borderWidth:1.5,pointRadius:0,tension:.25},
+ {label:'t2',data:fit(yrs,AN.map(r=>r.ghi)),borderColor:DIM,borderWidth:2.5,pointRadius:0,borderDash:[6,3]}]},
+ options:{...B,plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12,filter:i=>!i.text.startsWith('t')}}},
+ scales:{x:{grid:{display:false},ticks:{maxTicksLimit:9}},y:{min:4,max:7,title:{display:true,text:'kWh/m²/day'}}}}});
+
+const sk=['pre','winter','post','mon'],sn=['Pre-monsoon','Winter','Post-monsoon','Monsoon'],sc=[SUN,DIM,'#7A8C6B',RAIN];
+new Chart(seas,{type:'line',data:{labels:yrs,datasets:sk.map((k,i)=>({
+ label:sn[i],data:yrs.map(y=>SE[k][y]),borderColor:sc[i],borderWidth:1.7,pointRadius:0,tension:.3}))},
+ options:{...B,scales:{x:{grid:{display:false},ticks:{maxTicksLimit:9}},y:{min:3.5,max:7.2,title:{display:true,text:'kWh/m²/day'}}}}});
+
+new Chart(fc,{data:{labels:FC.map(f=>f.month),datasets:[
+ {type:'line',label:'hi',data:FC.map(f=>f.hi),borderWidth:0,pointRadius:0,backgroundColor:'rgba(43,99,80,.13)',fill:'+1',tension:.3},
+ {type:'line',label:'lo',data:FC.map(f=>f.lo),borderWidth:0,pointRadius:0,tension:.3},
+ {type:'line',label:'Projected generation',data:FC.map(f=>f.gen),borderColor:PV,borderWidth:2.5,pointRadius:3.5,tension:.3},
+ {type:'line',label:'Expected sunlight',data:FC.map(f=>f.ghi),borderColor:SUN,borderWidth:2,pointRadius:3,tension:.3,borderDash:[5,4],yAxisID:'y2'}]},
+ options:{...B,plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12,filter:i=>!['hi','lo'].includes(i.text)}}},
+ scales:{...B.scales,y:{min:200,max:520,title:{display:true,text:'kWh/month'}},
+ y2:{position:'right',min:2,max:8,grid:{display:false},title:{display:true,text:'kWh/m²/day'},ticks:{color:SUN}}}}});
+
+const LY=[2026,2031,2036,2041,2046,2051];
+new Chart(life,{type:'line',data:{labels:LY,datasets:[
+ {label:'Warranty floor only',data:[100,97.5,95,92.5,90,87.5],borderColor:'rgba(108,119,128,.85)',borderWidth:2,pointRadius:3.5,tension:.2,borderDash:[5,4]},
+ {label:'With atmospheric dimming',data:[100,95.5,91.1,86.8,82.6,78.5],borderColor:DIM,borderWidth:2.5,pointRadius:3.5,tension:.2}]},
+ options:{...B,scales:{...B.scales,y:{min:70,max:102,title:{display:true,text:'% of year-one output'}}}}});
+
+new Chart(money,{type:'bar',data:{labels:L,datasets:[
+ {label:'Billed',data:M.map(r=>r.billed),backgroundColor:'rgba(61,107,138,.34)',borderColor:RAIN,borderWidth:1,borderRadius:3},
+ {label:'Saved by solar',data:M.map(r=>r.saved),backgroundColor:PV,borderRadius:3}]},
+ options:{...B,scales:{...B.scales,y:{title:{display:true,text:'₹'}}}}});
+
+document.getElementById('tb').innerHTML=M.map(r=>`<tr><td>${r.month}</td><td>${r.days}</td><td>${r.gen.toFixed(1)}</td><td>${r.imp.toFixed(1)}</td><td>${r.exp.toFixed(1)}</td><td>${r.demand.toFixed(1)}</td><td>${r.ghi.toFixed(2)}</td><td>${r.rain.toFixed(0)}</td><td>${r.tmax.toFixed(1)}</td><td class="${r.resid<-5?'neg':''}">${r.resid>0?'+':''}${r.resid.toFixed(1)}%</td></tr>`).join('')
++`<tr class="t"><td>Total</td><td>206</td><td>2481.3</td><td>4043.5</td><td>1042.6</td><td>5482.1</td><td>4.72</td><td>1264</td><td>35.3</td><td></td></tr>`;
+</script></body></html>

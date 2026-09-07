@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+.DS_Store
+.env
+# Cached API pulls - except the committed reproducibility snapshot
+data/raw/*
+!data/raw/nasa_power_daily.csv
+# outputs/ is committed - it is the shareable report
