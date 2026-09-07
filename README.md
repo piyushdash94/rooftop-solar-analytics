@@ -1,7 +1,7 @@
 # Rooftop Solar Performance Analytics
 
-[![CI](https://github.com/YOUR_USERNAME/rooftop-solar-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/rooftop-solar-analytics/actions)
-[![Pages](https://img.shields.io/badge/dashboard-live-2B6350)](https://YOUR_USERNAME.github.io/rooftop-solar-analytics/)
+[![CI](https://github.com/piyushdash94/rooftop-solar-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/piyushdash94/rooftop-solar-analytics/actions)
+[![Pages](https://img.shields.io/badge/dashboard-live-2B6350)](https://piyushdash94.github.io/rooftop-solar-analytics/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -9,7 +9,7 @@
 paid data, no hardware — just TPCODL bills joined to free NASA POWER satellite
 irradiance for a 3 kWp bifacial array in Bhubaneswar, India.
 
-**[→ Live dashboard](https://YOUR_USERNAME.github.io/rooftop-solar-analytics/)**  ·  **[→ Full findings](FINDINGS.md)**
+**[→ Live dashboard](https://piyushdash94.github.io/rooftop-solar-analytics/)**  ·  **[→ Full findings](FINDINGS.md)**
 
 ---
 
