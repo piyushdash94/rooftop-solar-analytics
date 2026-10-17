@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rooftop-solar-analytics"
-version = "0.1.0"
+version = "0.2.0"
 description = "Weather-normalised performance analytics for residential rooftop PV, from utility bills and free satellite data"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Piyush" }]
+authors = [{ name = "Piyush Dash" }]
 keywords = ["solar", "photovoltaic", "energy", "analytics", "performance-ratio"]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -19,20 +19,20 @@ classifiers = [
 dependencies = [
     "pandas>=2.0",
     "numpy>=1.24",
+    "scipy>=1.10",
     "requests>=2.31",
-    "plotly>=5.18",
+    "plotly>=6.0",
+    "pvlib>=0.10",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=7.4", "pytest-cov>=4.1", "ruff>=0.4", "mypy>=1.8"]
-pv = ["pvlib>=0.10"]
-app = ["streamlit>=1.30"]
-
-[project.scripts]
-solar-report = "solar_analytics.cli:main"
+app = ["streamlit>=1.40"]
+article = ["markdown>=3.5", "kaleido>=1.0", "playwright>=1.40"]
 
 [project.urls]
-Repository = "https://github.com/YOUR_USERNAME/rooftop-solar-analytics"
+Homepage = "https://piyushdash94.github.io/rooftop-solar-analytics/"
+Repository = "https://github.com/piyushdash94/rooftop-solar-analytics"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -54,6 +54,9 @@ python_version = "3.10"
 ignore_missing_imports = true
 
 [tool.ruff.lint.per-file-ignores]
-# Long lines are unavoidable in the embedded HTML/CSS report templates,
+# Long lines are unavoidable in the embedded HTML/CSS templates,
 # and exploratory scripts import after computing paths.
 "scripts/*" = ["E501", "E402"]
+"app/*" = ["E501", "E402"]
+"src/solar_analytics/figures.py" = ["E501"]
+"src/solar_analytics/story.py" = ["E501"]

@@ -1,9 +1,8 @@
-name: Deploy dashboard to Pages
-
+name: Publish article to GitHub Pages
 on:
   push:
     branches: [main]
-    paths: ["site/**"]
+    paths: ["site/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -17,10 +16,10 @@ concurrency:
 
 jobs:
   deploy:
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5

@@ -56,6 +56,25 @@ def load_meter_readings(path: Path | str | None = None) -> pd.DataFrame:
     return pd.read_csv(path, parse_dates=["reading_date"])
 
 
+def load_occupancy(path: Path | str | None = None) -> pd.DataFrame:
+    """Days in each billing period when nobody was home (owner-reported).
+
+    Only periods with an absence are listed. Absent days have almost no household
+    load, so demand per *occupied* day is the comparable figure across months.
+    Generation is unaffected as long as the system stayed switched on.
+    """
+    path = Path(path) if path else DATA_DIR / "occupancy.csv"
+    return pd.read_csv(path, parse_dates=["period_start"])
+
+
+def occupied_days(bills: pd.DataFrame, occupancy: pd.DataFrame | None = None) -> pd.Series:
+    """Occupied days per billing period, indexed like `bills`."""
+    occ = load_occupancy() if occupancy is None else occupancy
+    absent = occ.set_index("period_start")["absent_days"]
+    gone = bills["period_start"].map(absent).fillna(0.0)
+    return (bills["days"] - gone).rename("occupied_days")
+
+
 def derive_from_meters(readings: pd.DataFrame) -> pd.DataFrame:
     """Recompute per-period consumption from cumulative meter deltas.
 
@@ -89,10 +108,11 @@ def validate_bills(
     ----------------------------
     The July 2026 cycle (02.07-01.08) prints an export of 204.10 kWh on the
     Net Meter Billing summary. The meter annexure shows 841.93 -> 943.98,
-    i.e. 102.05 kWh - exactly half. Net billable was computed as 419.21 kWh
-    instead of 521.26 kWh, under-billing the consumer by roughly Rs 622.
+    i.e. 102.05 kWh - exactly half. The energy charge on the same bill uses the
+    correct 521 units, so this is a print defect on the summary page, not a
+    mis-billing.
 
-    All five other cycles reconcile exactly.
+    All seven other cycles reconcile exactly.
     """
     issues: list[ValidationIssue] = []
 
@@ -146,7 +166,7 @@ def validate_bills(
 def assert_cumulative_integrity(bills: pd.DataFrame) -> dict[str, float]:
     """Sum per-period values; these must equal the final cumulative readings.
 
-    Expected at 2026-08-01: generation 2217.76, import 3502.22, export 943.98.
+    Expected at 2026-10-01: generation 2797.03, import 4559.42, export 1187.12.
     """
     return {
         "generation_kwh": round(bills["generation_kwh"].sum(), 2),

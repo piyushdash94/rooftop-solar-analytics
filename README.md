@@ -1,107 +1,129 @@
-# Rooftop Solar Performance Analytics
+# Reading a rooftop against the sky
 
 [![CI](https://github.com/piyushdash94/rooftop-solar-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/piyushdash94/rooftop-solar-analytics/actions)
-[![Pages](https://img.shields.io/badge/dashboard-live-2B6350)](https://piyushdash94.github.io/rooftop-solar-analytics/)
+[![Article](https://img.shields.io/badge/article-live-2B6350)](https://piyushdash94.github.io/rooftop-solar-analytics/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Turn a utility bill into a weather-normalised diagnostic.** No inverter API, no
-paid data, no hardware — just TPCODL bills joined to free NASA POWER satellite
-irradiance for a 3 kWp bifacial array in Bhubaneswar, India.
+A 3 kWp bifacial solar array went up on a family roof in Bhubaneswar, India, in February 2026.
+There is no inverter app and no hardware logging, only monthly electricity bills. This project
+joins those bills to free NASA satellite weather and asks three questions. Is the system
+working as it should? Why did the bills go up when the panels were new? What will it make
+next year?
 
-**[→ Live dashboard](https://piyushdash94.github.io/rooftop-solar-analytics/)**  ·  **[→ Full findings](FINDINGS.md)**
+**[Read the article](https://piyushdash94.github.io/rooftop-solar-analytics/)** (interactive charts) ·
+[PDF](article/rooftop-solar-article.pdf) · [Blog version](article/blog.md) · `streamlit run app/streamlit_app.py`
 
----
-
-## What it found
-
-Across seven months (Feb–Aug 2026, 206 days):
-
-- **Sunlight explains 91% of month-to-month generation** (r = +0.96). Everything
-  else — dust, heat, shading, outages — lives in the other 9%.
-- After normalising for irradiance and cell temperature, **only two months
-  under-delivered**: March (−9.6%) and May (−10.5%). Their raw yields differ by
-  12%; their residuals are within a point. That gap is the whole reason to
-  normalise.
-- **The bill rose because demand doubled**, not because the array weakened. It's
-  undersized for summer cooling load, not underperforming.
-- The 45% "solar covers nearly half my bill" figure is **bill offset** under net
-  metering. True direct self-sufficiency is **26%**. They are not the same number.
-
-And in the 42-year record for the same coordinates:
-
-- **The sky has dimmed ~10% since the 1980s** (−0.15 kWh/m²/day per decade,
-  p < 0.0001). It's aerosols, not clouds: the clearness index is flat while the
-  *clear-sky* baseline itself fell. This subtracts ~10% over the asset's life on
-  top of ~12.5% panel degradation — a cost most solar financial models ignore.
-
-A worked correction is part of the story: an early pass flagged March as a fault
-on climatological grounds. Fetching the actual irradiance showed March 2026 got
-*less* sun than April. The hypothesis was wrong, and the repo says so.
+Data: eight TPCODL bills, 8 February to 1 October 2026 (236 days, through the September bill).
 
 ---
 
-## The dashboard
+## What the data says
 
-`site/index.html` is a single self-contained page (Chart.js via CDN, no build
-step) in four parts: what happened, what explains it, the 42-year record, and
-what comes next. It reads its numbers inline, so it works offline and deploys to
-GitHub Pages as-is.
+| Question | Answer |
+|---|---|
+| What drives output? | **Sunlight explains 91%** of month-to-month generation. Adding temperature or rain made held-out predictions worse, so the model stayed simple. |
+| Can it forecast? | Fitted on February to August, it predicted **327 kWh for September against 316 metered (−3.4%)**. Across all months, holding each out in turn, the typical miss is 5%. |
+| Is the system healthy? | Yes. Against a physics model, only **March (−8%) and May (−9%)** fall short. March was mostly weather. May is heat or dust; monthly bills cannot separate the two. |
+| Why did bills rise? | **Demand rose 75% per day** from February to June (20 → 35 kWh/day) as cooling load grew. Generation did not fall. |
+| What will a year bring? | About **4,580 kWh** in a typical year, and 4,300–4,700 across the last ten years of weather. 2026 is a poor guide: July and August were 23–28% darker than normal. |
+| What has it saved? | **₹17,487** so far. Generation equals 45% of household demand on the bill; 26% of demand was met directly by the panels at the moment they produced. |
+| Would a white roof help? | About **+513 kWh a year** (+11%), payback 2.5–3.7 years, modelled. It adds light, not cooling: the panels end up about 1.3–2.6 °C warmer, which costs 16–37 kWh of the gain. |
+| Is the sky changing? | Since 1984, sunlight at this location has fallen 0.15 kWh/m² per day per decade. At this grid cell the decline is in the clear-sky component, consistent with aerosols. |
 
-## Reproduce
+![Generation per day against sunlight per day, one point per billing month](article/figures/scatter.png)
 
-```bash
-pip install -e ".[dev,pv]"     # pv extra pulls in pvlib for the POA model
-solar-report                   # bills + weather -> outputs/summary.json
-python scripts/generation_vs_weather.py   # rigorous POA + temperature residuals
-pytest                         # 25 tests, runs offline from cached weather
+---
+
+## How it works
+
+```
+bills.csv + meter_readings.csv ─┐
+                                ├─► physics.py ─► story.py ─► figures.py ─► build_article.py
+NASA POWER weather (cached CSV) ┘   sunlight on     every       every       HTML · PDF · blog
+                                    the panels      number      chart       + Streamlit app
 ```
 
-Weather is cached at `data/raw/nasa_power_daily.csv` so tests and CI never hit
-the network. Delete it to force a fresh NASA POWER pull.
+1. **Reconcile the bills.** Every billing period is checked against cumulative meter readings.
+   This caught a print defect on the July bill (export printed as 204.10 kWh; the meter says
+   102.05). The energy charge used the right figure, so it was not an under-billing.
+2. **Fetch the weather.** Daily sunlight, temperature and rain for the site's coordinates from
+   [NASA POWER](https://power.larc.nasa.gov/): free, no key, cached in `data/raw/` so every
+   result reproduces offline.
+3. **Model generation two ways.**
+   - *Sunlight line:* generation per day = 2.04 × sunlight + 2.56 (R² 0.91). Simple, and the
+     best forecaster on months it has not seen.
+   - *Physics model:* sunlight on the 12° panel plane × heat loss × 3 kWp × one fitted
+     efficiency. Less accurate as a forecaster (6.7% miss against 5.1%), but it explains *why*
+     a month over- or under-delivered. It is also the model run over ten years of historical
+     weather for the typical-year forecast.
+4. **Choose features by test, not by hunch.** Each candidate model is fitted on seven months and
+   asked to predict the eighth, for every month in turn (leave-one-out). Only what improved
+   those held-out predictions stayed.
+5. **Write once, render everywhere.** `story.compute()` produces every number and
+   `figures.py` every chart. The prose in `article/article.md` uses placeholders like
+   `[[fc_total]]`, so the text and the charts cannot disagree.
 
-## Add a new bill
+**Measured vs modelled.** Generation, import and export are metered. Weather is satellite
+estimates. The white-roof gain and its heat effect are modelled from the module datasheet and
+published field tests, not measured on this roof. The article labels each.
 
-Three edits, in order (see `CLAUDE.md` for the full procedure):
+---
 
-1. Append three cumulative meter readings to `data/meter_readings.csv`.
-2. Append one period row to `data/bills.csv`.
-3. Bump the counts in `tests/` and the `--end` default in `cli.py`, then
-   `pytest`.
+## Run it
+
+```bash
+pip install -e ".[dev,app,article]"
+python scripts/build_article.py      # site/index.html, article/blog.md, PDF, figures, FINDINGS.md
+streamlit run app/streamlit_app.py   # interactive version with adjustable assumptions
+pytest                               # 31 tests, offline
+```
+
+The PDF and PNG charts need a Chromium browser (`playwright install chromium`).
+
+### Add a new bill
+
+1. Append the three cumulative meter readings to `data/meter_readings.csv` and one row to
+   `data/bills.csv`. If the house stood empty, add a row to `data/occupancy.csv`.
+2. Refresh the weather: `python -m solar_analytics.weather 2026-02-08 <bill end date>`.
+3. `pytest`, then `python scripts/build_article.py`.
+
+The numbers update themselves. If a conclusion changes, `tests/test_story.py` fails and says
+which one, so the prose gets rewritten rather than going stale.
+
+---
 
 ## Layout
 
 ```
-data/            bills, meter readings, cached weather, 42-yr climate series
-src/solar_analytics/   config · loaders · weather · metrics · scenarios · viz · cli
-scripts/         POA residual model, tilt estimation
-site/index.html  the dashboard (GitHub Pages root)
-FINDINGS.md      full narrative report
-CLAUDE.md        context for AI-assisted work on this repo
-tests/           25 tests
+data/                    bills, meter readings, occupancy; data/raw/ holds NASA POWER weather
+src/solar_analytics/
+  config.py              site, module and tariff facts (the only place they live)
+  loaders.py             read and reconcile bills
+  physics.py             weather → sunlight on the panels → heat loss → expected energy
+  story.py               every number in the article
+  figures.py             every chart (Plotly)
+  weather.py             refresh the cached NASA POWER data
+article/                 article.md (source), references.json, generated blog, PDF, figures
+app/streamlit_app.py     interactive companion
+scripts/build_article.py renders the article in all formats
+site/index.html          the published article (GitHub Pages)
+tests/                   bill reconciliation, article conclusions, published page
 ```
 
-## Method, honestly
+## Tech stack
 
-- **n = 7.** Every correlation is descriptive, not inferential.
-- **Performance ratio** uses horizontal irradiance; the panels are tilted, so it
-  reads high in low-sun months. `scripts/generation_vs_weather.py` does the
-  rigorous plane-of-array version with `pvlib`.
-- **Tilt is an estimate** (~12°) — the largest single uncertainty here.
-- **The temperature trend is flagged, not used**: NASA POWER shows maxima
-  falling, Indian station data shows them rising. Treated as a reanalysis
-  artefact.
-- **One bill quirk**: July's net-metering annexure double-printed export
-  (204.10 vs a true 102.05 kWh). The energy charge used the correct figure — a
-  print defect, not a mis-bill. A test asserts it's still detected.
+Python · pandas, NumPy, SciPy · pvlib (solar position, clear-sky model) · Plotly ·
+Streamlit · Playwright (PDF) · pytest, ruff · GitHub Actions and GitHub Pages.
 
-## Data sources
+## Sources
 
-- **Bills** — TPCODL (TP Central Odisha Distribution Ltd), hand-transcribed,
-  reconciled against cumulative meter readings.
-- **Weather** — [NASA POWER](https://power.larc.nasa.gov/) daily point API. Free,
-  no key, 1981–present.
-- **Module** — Waaree Elite N-type BiN-01 bifacial datasheet.
+- **Bills:** TP Central Odisha Distribution Ltd (TPCODL), hand-transcribed.
+- **Weather:** NASA POWER daily and monthly API. Sunlight from CERES satellite products,
+  temperature and rain from MERRA-2.
+- **Module:** Waaree Elite N-type BiN-01 bifacial datasheet.
+- **Literature:** 18 papers and documents, cited in the article and listed in
+  `article/references.json`.
 
 ## License
 

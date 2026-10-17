@@ -23,3 +23,6 @@ reading_date,meter,parameter,reading_kwh
 2026-07-01,AS0210962,generation,1949.00
 2026-08-01,AS0210962,generation,2217.76
 2026-09-01,AS0210962,generation,2481.26
+2026-10-01,AS0210961,import,4559.42
+2026-10-01,AS0210961,export,1187.12
+2026-10-01,AS0210962,generation,2797.03

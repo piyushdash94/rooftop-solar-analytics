@@ -4,162 +4,155 @@ Context for Claude Code. Read fully before editing anything.
 
 ## What this repo is
 
-Weather-normalised performance analytics for a 3 kWp residential rooftop PV
-array in Bhubaneswar, India, built from utility bills and free satellite
-irradiance. It is a data-science portfolio project for Piyush; the array
-belongs to a family member. The analysis is real, the numbers are audited,
-and the repo has already caught one utility print defect and one of its own
-modelling bugs. Preserve that culture: every number traceable, every caveat
-visible, every estimate labelled.
+A published article, plus the code that produces it: weather-normalised analytics for a
+3 kWp bifacial rooftop array in Bhubaneswar, India, built from utility bills and free
+satellite weather. It is Piyush's data-science portfolio project; the array belongs to his
+family. Culture to preserve: every number traceable to data, every caveat visible, every
+estimate labelled as one. The repo has already caught a utility print defect and several of
+its own modelling mistakes, and the article says so.
 
-## Layout and what each part owns
+## How the pieces fit
 
 ```
-data/bills.csv             one row per billing period; hand-transcribed; authoritative
-data/meter_readings.csv    cumulative meter readings; bills must reconcile to these
-data/raw/nasa_power_daily.csv   cached NASA POWER daily weather; committed so tests run offline
+data/                          inputs only; bills.csv is hand-transcribed and authoritative
 src/solar_analytics/
-  config.py     Site, Tariff, Module dataclasses — the only place facts live
-  loaders.py    load bills/readings; validate_bills() finds reconciliation defects
-  weather.py    NASAPower / OpenMeteoArchive providers; load_or_fetch() with cache
-  metrics.py    yield, PR (GHI-based, flagged), Kt, SCR, self-sufficiency vs solar offset
-  scenarios.py  albedo, cleaning, expansion — every Scenario carries `assumptions`
-  viz.py        plotly figures; caveats enforced in subtitles
-  cli.py        `solar-report` / `python -m solar_analytics.cli --scenarios`
-scripts/
-  generation_vs_weather.py   POA + temperature residual model (the rigorous one)
-  estimate_tilt.py, optimal_tilt.py
-tests/          25 tests; pytest runs offline from the cached weather
-outputs/        generated html/csv/json — regenerate, don't hand-edit
-site/index.html static dashboard for GitHub Pages (Chart.js, no build)
-FINDINGS.md     consolidated narrative report — the human-readable output
+  config.py     Site, Tariff, Module dataclasses. The only place site facts live.
+  loaders.py    bills, meter readings, occupancy; validate_bills() finds reconciliation defects
+  physics.py    daily weather -> sunlight on the panels -> heat derate -> E_eff; period rollup
+  story.py      compute(): EVERY number the article uses, as a JSON-able dict with `facts`
+  figures.py    every chart, defined once in Plotly; FIGURES maps id -> (builder, caption)
+  weather.py    refresh data/raw/nasa_power_daily.csv (python -m solar_analytics.weather START END)
+article/article.md             the prose. [[fact]] placeholders, {{fig:id}} / {{figs:a,b}} markers,
+                               {{ref:key}} citations (keys in article/references.json, all verified)
+scripts/build_article.py       renders site/index.html, article/blog.md, article/figures/*.png,
+                               article/rooftop-solar-article.pdf and FINDINGS.md
+app/streamlit_app.py           interactive companion; same story + figures, plus what-if sliders
+tests/                         31 tests; test_story.py pins the article's conclusions
 ```
+
+Never hand-edit `site/index.html`, `article/blog.md`, `FINDINGS.md` or the PNGs/PDF. Edit
+`article/article.md`, `story.py` or `figures.py`, then run `python scripts/build_article.py`.
+A number in prose must come from `facts`; add it to `story.py` rather than typing it.
 
 ## Site facts
 
-Live in `src/solar_analytics/config.py`. Don't duplicate them elsewhere.
-Key ones: 3.0 kWp, commissioned 2026-02-08, Waaree BiN-01 bifacial TOPCon
-(γ = −0.30 %/°C, bifaciality 0.80), tilt ≈ 12° (estimate ±3), azimuth 180°
-(assumed), ground albedo 0.12 (bare damp concrete), sanctioned load 7 kW,
-TPCODL domestic LT slabs 2.90/4.70/5.70/6.10 + 4% duty. Owner-reported
-outages ~5 h/month daytime; grid-tied inverter drops out on outage.
+In `config.py`. 3.0 kWp, commissioned 2026-02-08, Waaree BiN-01 bifacial TOPCon
+(γ = −0.30 %/°C, NOCT 43 °C, bifaciality 0.80). **Panels are fixed at 12°, facing south.
+Treat that as given; the article does not discuss tilt** (the residual pattern is the same
+anywhere from 8° to 25°, which is why). Ground albedo 0.12 (dark concrete). TPCODL domestic LT
+slabs 2.90 / 4.70 / 5.70 / 6.10 + 4% duty; top-slab value of a unit ₹6.34.
 
-The bill field "Solar Capacity (KWp): 0.00" is a TPCODL data-entry gap.
+## Data state as of 2026-10-06 (through the September bill)
 
-## Data state as of 2026-09-04
+Eight billing periods, 2026-02-08 → 2026-10-01, 236 days. Cumulative: generation 2797.03,
+import 4559.42, export 1187.12 kWh. All periods reconcile against `meter_readings.csv`.
 
-Seven billing periods, 2026-02-08 → 2026-09-01, 206 days.
-Cumulative: generation 2481.26, import 4043.47, export 1042.63 kWh.
-All seven periods reconcile against `meter_readings.csv`.
+Weather files: `raw/nasa_power_daily.csv` (billed days, complete through 2026-10-01, refreshed
+2026-10-06), `raw/nasa_power_daily_2016_2025.csv` (ten weather-years),
+`raw/nasa_power_monthly_1984_2025.csv` and `bbsr_annual_climate_1984_2025.csv` (long record).
+NASA revises recent months: between two downloads June 2026 changed by ~2%. Re-download the
+latest months before trusting them, and keep that caveat in the article.
 
-Adding a bill means three edits, in this order:
-1. Append the three new cumulative readings to `data/meter_readings.csv`
-   (import, export, generation — same date, same order as existing rows).
-2. Append one row to `data/bills.csv`. `export_kwh` is the meter diff;
-   `billed_export_printed_kwh` is whatever the annexure says, even if wrong.
-3. Bump `--end` default in `cli.py`, the `PERIODS` list in
-   `scripts/generation_vs_weather.py`, and the counts in
-   `tests/test_metrics.py` / `tests/test_validation.py`. Run `pytest`.
-Then refresh `data/raw/nasa_power_daily.csv` via `weather.load_or_fetch`
-(delete the cache first) and regenerate `outputs/`.
+## Models
 
-## Two things that were wrong and are now fixed — don't reintroduce
+1. **Sunlight line** — gen/day = a·GHI + b (a ≈ 2.04, b ≈ 2.56, R² 0.91). Best leave-one-out
+   forecaster (mean miss ~5%). September out-of-sample: 327 predicted vs 316 metered (−3.4%).
+   Feb under- and May over-predicted because of panel geometry (+7.1% / −2.5% vs flat ground)
+   and heat (5.0% / 7.2% loss) — the line cannot see either.
+2. **Physics** — E = POA(12°, Erbs daily split) × f_temp × kWp × η. Cell temperature follows
+   NOCT: T_cell = T_air + (NOCT−20)/800 × G, G the energy-weighted mean irradiance of the day
+   (π²·POA/(8·day length)). η = median of the eight periods (≈0.93), so residuals are
+   *relative* health only. Used for residuals and for the typical-year forecast run over
+   2016–2025 weather. Its leave-one-out miss (~6.7%) is worse than the line's; it is kept for
+   diagnosis and winter geometry, not forecasting accuracy. Say so.
 
-**July 2026 export.** The Net Meter Billing annexure prints 204.10 kWh;
-the meter says 102.05. An early README called this a ₹650 under-billing.
-It is not: the energy-charge slabs on the bill front sum to 521 units, the
-correct figure. It is a print defect on the summary page only.
-`test_detects_july_export_doubling` still asserts detection. Keep the
-detection; keep the corrected interpretation.
+Feature selection was done by leave-one-out, not intuition: adding temperature (7.2%) or rain
+(6.8%) to the sunlight line made it worse. Do not add features without re-running that
+comparison (`story.compute()["models"]`).
 
-**Weather coverage.** NASA POWER lags ~2 weeks. The most recent period will
-have missing trailing days. `rollup()` in `generation_vs_weather.py` now
-scales `e_eff_total` by `days / weather_days` and reports both. Before that
-fix August showed +20% residual (real: ~+5%). Any new aggregation over
-daily weather must handle partial coverage the same way.
+## Findings that hold (n = 8)
+
+- Sunlight explains 91% of month-to-month generation.
+- Residuals: March ≈ −8% and May ≈ −9% are the only shortfalls. March was mostly weather (it
+  got less sun than April). May: heat or dust; bills cannot separate them. Jul/Aug ≈ +7–10%,
+  likely the daily diffuse split under heavy overcast, a method limit.
+- July–August 2026 were 23–28% darker than normal, darker than any year 2016–2025. Do not
+  project from 2026 weather.
+- Typical year ≈ 4,580 kWh (Oct 2026 – Sep 2027); 2016–2025 weather gives 4,300–4,700, CV 2.7%.
+  The simple line gives ~4,400 because it has never seen a winter sun angle.
+- White roof: +12% light (≈550 kWh). Heat is two bounds: model says extra rear light warms cells
+  ~2.6 °C (April); cooler surroundings take back ~1.3 °C (Mahmood 2023, measured on MONOFACIAL
+  panels). Net ≈ +1.3 °C, heat cost 16–37 kWh, net gain 513–534 kWh (article uses 513). The
+  warming is a MODEL result: no cited source measures bifacial cells over dark vs white roof.
+  Never write "field tests show the panels run warmer".
+- Demand rose ~75% per day Feb→Jun (20→35 kWh/day). Bills rose because of demand.
+- May: nobody home ~7.5 days (owner: "a week or more", ~200 fewer imported units; 7.5 days
+  reproduces 191). Folded into demand as an assumption (per occupied day); not a separate
+  section of the article. Generation is never adjusted, and the system ran normally.
+- Bill offset 45% = self-sufficiency 26% + export credits 19%; shown as a donut chart.
+- Long record: GHI −0.15 kWh/m²/day per decade (p < 0.0001), clear-sky −0.18, clearness index
+  flat (p = 0.53): at this grid cell the decline is clear-sky (aerosol). Nationally the
+  literature finds clouds dominant (Jadhav 2024), with this region the most aerosol-affected.
+  Do not write "aerosols, not clouds" without that scope. The record's falling Tmax
+  contradicts IMD station data (Kumar 2023); flagged, never used.
+- Lifetime: datasheet warranty 99% after year 1, 87.4% after year 30 (~0.4%/yr), over 30 years.
 
 ## Metric definitions — do not drift
 
 | name | formula | note |
 |---|---|---|
-| specific_yield | gen / kWp / days | kWh/kWp/day |
-| pr_ghi | yield / GHI | GHI is horizontal; tilt inflates winter PR. Name keeps `_ghi_` so the bias stays visible. |
-| pr_ghi_tcorr | pr_ghi / (1 + γ(T_cell − 25)) | T_cell = T_air + 25, a proxy |
-| kt | GHI_allsky / GHI_clearsky | pure weather; NaN where clear-sky missing |
-| scr | (gen − export) / gen | load-match |
-| self_sufficiency | (gen − export) / demand | physical independence, **26.2%** lifetime |
-| solar_offset | gen / demand | net-metering bill offset, **45.3%** lifetime |
-| residual_pct | (actual − expected)/expected, expected = E_eff·kWp·η_median | POA-based; η fitted on the same periods, so only relative health survives |
+| specific yield | gen / kWp / days | kWh/kWp/day |
+| scr (self-consumption) | (gen − export) / gen | share of solar used at home |
+| self-sufficiency | (gen − export) / demand | 26% lifetime |
+| bill offset | gen / demand | 45% lifetime; counts export credit |
+| residual | actual / expected − 1 | physics model; relative only |
+| cooling-degree-days | mean of max(0, T_mean − 25 °C) per day | |
 
-`self_sufficiency` and `solar_offset` are not the same and a test guards it.
-Public prose must say which one it means.
+Self-sufficiency and bill offset are different numbers; prose must say which.
 
-`FINDINGS.md` is the prose companion to `site/index.html`; they share the same
-numbers and must be updated together. If you change a figure in one, change it
-in the other, or they will drift.
+## Adding a bill
 
-## Findings that hold (n = 7)
+1. Append three cumulative readings to `data/meter_readings.csv` and one row to `data/bills.csv`
+   (`export_kwh` is the meter diff; `billed_export_printed_kwh` is what the annexure says).
+   Add an `occupancy.csv` row if the house was empty.
+2. Refresh `data/raw/nasa_power_daily.csv` with `python -m solar_analytics.weather` (it lags ~2 weeks; `physics.period_rollup` scales
+   partial coverage, keep that).
+3. Bump counts in `tests/test_validation.py`; `pytest`.
+4. `python scripts/build_article.py`; reread the article. If `tests/test_story.py` fails, a
+   conclusion changed and the prose needs rewriting, not the test.
 
-- Generation tracks the sun until monsoon onset (2nd week June); Jul/Aug GHI
-  is half of May and generation halves with it.
-- After POA + temperature normalisation, **March (−9.6%) and May (−10.5%)**
-  are the only under-delivering months. May: most sun, worst conversion,
-  hottest. June residual returns to ~0 after first rains — soiling signature.
-- Demand, not generation, drove the bill: demand doubled Feb→Jun with
-  cooling load. The array is undersized for summer, not underperforming.
-- SCR rose 50% → 69% as AC pulled load into daylight.
-- Monsoon months run slightly positive residual — plausibly the Erbs
-  decomposition under-credits diffuse on a 12° plane. Not a system effect.
+## Things that were wrong and are fixed — don't reintroduce
 
-## Long-record climate context (1984-2025, NASA POWER, same coordinates)
+- **July export print defect** (204.10 printed vs 102.05 metered). Energy charge used the right
+  figure; it is not an under-billing. `test_detects_july_export_doubling` keeps detecting it.
+- **Weather coverage.** Summing only available days faked a +20% August residual; scale by
+  days / weather days.
+- **Fixed +25 °C cell temperature** over-penalised cloudy months; replaced by the NOCT form.
+- **Projecting from 2026 weather and guessed winter sunlight** gave 4,324 kWh; replaced by the
+  ten-weather-year run.
+- **Incomplete weather cache** (Aug 28/31, Sep 29/30 days) made the September test look like
+  −1.6%; with complete, revised data it is −3.4%.
+- **Lifetime ageing at 0.5%/yr over 25 years** was not the datasheet; it says ~0.4%/yr over 30.
+- **Unquoted "Source Sans 3"** in a CSS font list is invalid (the "3"); keep it quoted in `FONT`.
 
-Fetched and analysed separately; the annual series is in
-`data/bbsr_annual_climate_1984_2025.csv`.
+## Article and site direction
 
-- Irradiance fell 5.14 -> 4.65 kWh/m2/day between the first and last decade,
-  -0.151/decade, p<0.0001, r2=0.77.
-- **It is aerosols, not clouds.** Clearness index flat (0.80, p=0.53) while
-  clear-sky irradiance fell *faster* than measured (-0.179/decade, r2=0.92).
-  Corroborated by published CERES/station work on eastern-coastal India.
-- Dry seasons lost most: pre-monsoon -10.8%, winter -13.4%, monsoon only -4.9%.
-- Monsoon onset shows no trend (p=0.92). Annual CV steady near 2.5%.
-- Over 25 years, dimming costs ~10% on top of ~12.5% panel degradation.
-- **Do not build on the temperature trend.** POWER shows Tmax *falling*
-  0.21 C/decade; Indian station records show it rising. Treat as reanalysis
-  artefact. Flagged as such in FINDINGS.md and the dashboard.
+Writing: plain, first-person plural, hunch → test → result. Short direct sentences; no
+em-dash asides or stock phrases. Every chart has a one-line caption saying what it shows.
+Every claim from outside this data carries a {{ref:...}} citation. No to-do lists or
+suggestions to take photos or measurements in the article. GitHub user: piyushdash94.
+Design: light theme only (white page, no dark mode, also in Streamlit), marigold for sun, monsoon blue for rain, deep green for PV, rust for
+shortfalls; one typeface (Source Sans 3); hairline rules; colours as CSS tokens; chart colours mapped to the same tokens at runtime. No uppercase eyebrows, no numbered
+section markers, no dark-SaaS cards.
 
-## Open questions
+## Simplification (v0.2.0)
 
-1. Separate heat from soiling in May — needs daily inverter output.
-2. Tank-and-pipe shadow on row 1 — two photos at ~08:30/16:30 on a clear
-   day, or a sun-path obstruction model.
-3. Measured tilt and azimuth — a phone inclinometer. Would let PR use POA
-   properly and retire the `_ghi_` caveat.
-4. Outage loss — one month of logged outage windows.
-5. Bifacial rear-gain if concrete is painted white — currently a datasheet
-   estimate (+12%), unmeasured.
-
-## Scenarios (all modelled)
-
-Baseline 4,321 kWh/yr. White surface +12% (₹10k, ~3.1 yr). Expansion to
-4–4.5 kWp is unsubsidised (PM Surya Ghar CFA caps at 3 kW) and hinges on
-inverter DC headroom: ₹47–60k without swap, ₹100k with. Batteries are not
-recommended; net metering makes them uneconomic here.
+The pre-article pipeline (metrics.py, scenarios.py, viz.py, cli.py and their tests) was removed;
+nothing the article uses depended on it, and `story.compute()` output was verified identical
+before and after. Do not resurrect parallel metric code: add numbers to `story.py`.
 
 ## Conventions
 
-- Python ≥3.10. `pip install -e ".[dev,pv]"`. `pvlib` needed for scripts/.
-- kWh everywhere. ₹ with slab-aware costing via `Tariff.cost()`.
-- Billing periods are closed intervals. ISO dates.
-- Every figure gets a one-line source/caveat caption.
-- Round for display only.
-- Don't fetch weather in tests. Don't commit outputs by hand.
-- `ruff` line-length 100; `scripts/` may exceed it in embedded HTML.
-
-## Site (dashboard) direction
-
-Light stone background, marigold for sun, monsoon blue for rain, deep green
-for PV. One typeface. Left-aligned, hairline rules, generous whitespace. The
-hero is the sun-and-rain strip: daily GHI as a filled area, rain as bars
-pointing down, monthly generation as dots on a right axis. No dark-mode SaaS
-cards, no uppercase eyebrow labels, no numbered section markers.
+Python ≥ 3.10. `pip install -e ".[dev,app,article]"`. kWh everywhere; ₹ via `Tariff.cost()`.
+Billing periods are closed intervals, ISO dates. Round for display only. Tests never fetch
+weather. Static PNGs need kaleido and a Chromium (`BROWSER_PATH`).

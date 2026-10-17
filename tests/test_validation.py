@@ -19,11 +19,11 @@ from solar_analytics.loaders import (
     validate_bills,
 )
 
-# Final cumulative meter readings at 2026-08-01. Independent ground truth.
+# Final cumulative meter readings at 2026-10-01. Independent ground truth.
 EXPECTED_CUMULATIVE = {
-    "generation_kwh": 2481.26,
-    "import_kwh": 4043.47,
-    "export_kwh": 1042.63,
+    "generation_kwh": 2797.03,
+    "import_kwh": 4559.42,
+    "export_kwh": 1187.12,
 }
 
 
@@ -37,9 +37,9 @@ def readings() -> pd.DataFrame:
     return load_meter_readings()
 
 
-def test_bills_load_seven_periods(bills):
-    assert len(bills) == 7
-    assert bills["days"].sum() == 206
+def test_bills_load_eight_periods(bills):
+    assert len(bills) == 8
+    assert bills["days"].sum() == 236
 
 
 def test_cumulative_totals_match_meters(bills):
@@ -73,7 +73,7 @@ def test_detects_july_export_doubling(bills):
 
     Meter annexure : 841.93 -> 943.98 = 102.05 kWh
     Bill summary   : 204.10 kWh
-    Effect         : net billable 419.21 instead of 521.26 kWh (~Rs 622 under-billed)
+    Effect         : summary page only; the energy charge uses the correct 521 units
     """
     issues = validate_bills(bills)
     assert len(issues) == 1, f"expected exactly one defect, got {len(issues)}"
@@ -88,16 +88,58 @@ def test_detects_july_export_doubling(bills):
 
 
 def test_all_other_periods_reconcile(bills):
-    """Only July is defective; the other five cycles are clean."""
+    """Only July is defective; the other seven cycles are clean."""
     issues = validate_bills(bills)
     flagged = {i.period_start for i in issues}
     assert flagged == {"2026-07-02"}
 
 
 def test_under_billing_amount(bills):
-    """Quantify the financial impact of the defect."""
+    """What the doubled figure would have been worth had it been billed (it was not)."""
     issue = validate_bills(bills)[0]
     over_credited_units = issue.found - issue.expected
     marginal_rate = 6.10 * 1.04
     assert over_credited_units == pytest.approx(102.05, abs=0.01)
     assert over_credited_units * marginal_rate == pytest.approx(647.4, abs=5)
+
+
+def test_occupancy_adjusts_only_may():
+    """Nobody was home 7.5 days (calibrated) in the May period; every other period is full."""
+    from solar_analytics.loaders import load_occupancy, occupied_days
+
+    bills = load_bills()
+    occ = occupied_days(bills, load_occupancy())
+    expected = bills["days"].astype(float).copy()
+    may = bills["period_start"] == pd.Timestamp("2026-05-02")
+    assert may.sum() == 1
+    expected[may] -= 7.5
+    assert occ.tolist() == pytest.approx(expected.tolist())
+
+
+def test_may_demand_per_occupied_day_follows_heat():
+    """Per occupied day, May demand sits between April and June, as the heat predicts."""
+    from solar_analytics.loaders import load_occupancy, occupied_days
+
+    b = load_bills()
+    demand = b["import_kwh"] + b["generation_kwh"] - b["export_kwh"]
+    per_day = demand / occupied_days(b, load_occupancy())
+    apr, may, jun = per_day.iloc[2], per_day.iloc[3], per_day.iloc[4]
+    assert may == pytest.approx(35.8, abs=0.2)
+    assert apr < may
+    assert abs(may - jun) < 2.0
+
+
+def test_absence_matches_owner_reported_import_shortfall():
+    """The owner reports ~200 fewer imported units in May. A 7.5-day absence should
+    reproduce that, which is what pins the occupancy figure."""
+    from solar_analytics.loaders import load_occupancy, occupied_days
+
+    b = load_bills()
+    may = b.iloc[3]
+    od = occupied_days(b, load_occupancy()).iloc[3]
+    gen, imp, exp, d = may["generation_kwh"], may["import_kwh"], may["export_kwh"], may["days"]
+    self_used = gen - exp
+    demand = imp + self_used
+    self_cf = min(self_used / (gen / d * od), 1.0) * gen
+    extra_import = (demand / od * d - self_cf) - imp
+    assert extra_import == pytest.approx(190, abs=15)

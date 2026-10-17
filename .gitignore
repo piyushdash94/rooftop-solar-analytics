@@ -13,7 +13,10 @@ htmlcov/
 .ipynb_checkpoints/
 .DS_Store
 .env
-# Cached API pulls - except the committed reproducibility snapshot
+# Cached API pulls, except the committed snapshots the article and tests are built from
 data/raw/*
 !data/raw/nasa_power_daily.csv
-# outputs/ is committed - it is the shareable report
+!data/raw/nasa_power_daily_2016_2025.csv
+!data/raw/nasa_power_monthly_1984_2025.csv
+# build scratch
+article/.print.html

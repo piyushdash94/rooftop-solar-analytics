@@ -68,30 +68,14 @@ class Site:
 
     kwp: float = 3.0
     commissioned: str = "2026-02-08"
-    sanctioned_load_kw: float = 7.00
 
-    # ESTIMATE from imagery (29 May / 03 Jun 2026), not measured.
-    # Visual cues: standing water on the module face, shallow profile when
-    # sighted along the rows, modest front/rear post differential, and
-    # cyclone-driven regional practice of 10-15 deg. A POA scan across
-    # candidate tilts corroborates weakly (CV minimum at 5-12 deg) and rules
-    # out 20 deg+, but cannot separate 5 from 12 on six months of data.
-    # REPLACE with a phone inclinometer reading -- 30 seconds of work.
-    tilt_deg: float | None = 12.0          # ESTIMATE +/- 3
-    azimuth_deg: float | None = 180.0      # ASSUMED due south, unverified
-
-    # Clearance from roof surface to the module's lower edge. Drives bifacial
-    # rear gain as strongly as albedo does. UNMEASURED.
-    mounting_clearance_m: float | None = None
+    # Installed angle, taken as fixed throughout the analysis.
+    tilt_deg: float = 12.0
+    azimuth_deg: float = 180.0             # facing due south
 
     # Roof surface beneath the array. Drives bifacial rear gain.
     # Bare, often-damp dark concrete as of 2026-08.
     ground_albedo: float = 0.12
-
-    # Owner-reported grid outages: ~2-3 h, roughly every other week, daytime.
-    # Grid-tied inverters shut down during outages (anti-islanding), so
-    # generation is lost even in full sun. ESTIMATE, not measured.
-    outage_hours_per_month: float = 5.0
 
     module: Module = field(default_factory=Module)
     tariff: Tariff = field(default_factory=Tariff)
