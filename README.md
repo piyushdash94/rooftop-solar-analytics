@@ -36,6 +36,29 @@ Data: nine TPCODL bills, 8 February to 1 November 2026 (267 days, through the Oc
 
 ---
 
+## Research: same roof, twelve cities
+
+**[Read it](https://piyushdash94.github.io/rooftop-solar-analytics/cities/)** ·
+[PDF](research/same-roof-twelve-cities.pdf) · [Blog version](research/cities_blog.md)
+
+The same 3 kWp array, run through ten years of NASA weather (2016–2025) in twelve Indian cities.
+The hypothesis, written down before running anything, was that **monsoon cloud decides rooftop
+yield far more than summer heat**. One of its three tests held.
+
+- **Heat is a small tax.** It costs 3.8–6.1% of output, and the hottest cities still produce
+  the most. The spread in sunlight across cities is 12 times the spread caused by heat.
+- **The monsoon does not separate cities.** It explains only 15% of the between-city gap in
+  panel sunlight. Winter explains 43%, the pre-monsoon months 30%.
+- **Haze matters more than cloud.** Splitting the gap into latitude, haze and cloud, haze is the
+  largest part (42% over the year). The haziest dry-season skies are in Kolkata, Lucknow,
+  Bhubaneswar, Guwahati and Delhi.
+- Ahmedabad tops the table at 5,199 kWh a year; Kolkata is last at 4,286 (21% less).
+  Bhubaneswar is 10th of 12, and its fresh run agrees with the bill-calibrated article to 0.1%.
+
+![The same array in twelve cities](research/figures/c_rank.png)
+
+---
+
 ## How it works
 
 ```
@@ -81,7 +104,7 @@ published field tests, not measured on this roof. The article labels each.
 pip install -e ".[dev,app,article]"
 python scripts/build_article.py      # site/index.html, article/blog.md, PDF, figures, FINDINGS.md
 streamlit run app/streamlit_app.py   # interactive version with adjustable assumptions
-pytest                               # 33 tests, offline
+pytest                               # 41 tests, offline
 ```
 
 The PDF and PNG charts need a Chromium browser (`playwright install chromium`).
@@ -109,10 +132,12 @@ src/solar_analytics/
   story.py               every number in the article
   figures.py             every chart (Plotly)
   weather.py             refresh the cached NASA POWER data
+  cities.py              the twelve-city research: same array, ten years of weather per city
 article/                 article.md (source), references.json, generated blog, PDF, figures
+research/                cities.md (source), generated blog, PDF, figures
 app/streamlit_app.py     interactive companion
 scripts/build_article.py renders the article in all formats
-site/index.html          the published article (GitHub Pages)
+site/index.html          the published article (GitHub Pages); site/cities/ the research page
 tests/                   bill reconciliation, article conclusions, published page
 ```
 

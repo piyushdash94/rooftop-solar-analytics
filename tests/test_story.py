@@ -97,11 +97,13 @@ def test_every_fact_used_by_article_exists(B):
 
 
 def test_citations_resolve_and_every_source_is_cited():
+    """Across both documents: no dangling keys, no unused sources."""
     import json
     import re
     from pathlib import Path
     root = Path(__file__).resolve().parents[1]
-    text = (root / "article" / "article.md").read_text(encoding="utf-8")
+    text = "\n".join((root / f).read_text(encoding="utf-8")
+                      for f in ("article/article.md", "research/cities.md"))
     refs = json.loads((root / "article" / "references.json").read_text(encoding="utf-8"))
     cited = {k for m in re.findall(r"\{\{ref:([a-z0-9_,]+)\}\}", text) for k in m.split(",")}
     assert cited <= set(refs), cited - set(refs)

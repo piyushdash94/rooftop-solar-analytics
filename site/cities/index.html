@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Same roof, twelve cities</title>
+<meta name="description" content="We ran one 3 kWp rooftop array through ten years of weather in twelve Indian cities to ask what really decides how much it makes: monsoon cloud or summer heat. The answer was neither.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+/* Light theme only, by choice: white page whatever the device's dark-mode setting. */
+/* Layout: wide reading column with a sticky contents rail on large screens; charts run
+   the full column width and pair up side by side where two belong together. */
+:root{
+  color-scheme:light;
+  --bg:#FFFFFF; --surface:#FFFFFF; --ink:#1E252A; --mut:#5E696F; --rule:#E2DED4; --soft:#EFECE5;
+  --sun:#C2851E; --rain:#3C6A89; --pv:#2B6350; --dim:#9A5B3D;
+  --c-ink:#1E252A; --c-mut:#6B767D; --c-grid:#E4E0D6; --c-card:#FFFFFF; --c-sun:#C2851E; --c-rain:#3C6A89;
+  --c-pv:#2B6350; --c-dim:#9A5B3D; --c-hi:#7C4E08; --c-ramp0:#F1ECDD; --c-ramp1:#E3C06C;
+  --font:"Source Sans 3","Source Sans Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17.5px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;padding-inline:20px}
+a{color:var(--pv);text-underline-offset:3px}
+a:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+header.top{max-width:1180px;margin:0 auto;padding-block:48px 28px;border-bottom:1px solid var(--rule)}
+header.top h1{font-size:clamp(2rem,4.6vw,3.1rem);line-height:1.08;letter-spacing:-.022em;font-weight:700;
+  margin:0;max-width:18ch;text-wrap:balance}
+header.top .deck{font-size:1.22rem;color:var(--mut);margin:14px 0 0;max-width:46ch;line-height:1.45;text-wrap:balance}
+header.top .byline{font-size:.92rem;color:var(--mut);margin:18px 0 0}
+header.top .byline b{color:var(--ink);font-weight:600}
+.page{max-width:1180px;margin:0 auto;padding-block:32px 72px;display:grid;grid-template-columns:minmax(0,1fr);gap:40px}
+@media (min-width:1080px){.page{grid-template-columns:200px minmax(0,1fr);gap:56px}}
+nav.toc{display:none}
+@media (min-width:1080px){nav.toc{display:block;position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);
+  align-self:start;font-size:.86rem;line-height:1.4}}
+nav.toc p{margin:0 0 10px;color:var(--mut);font-weight:600}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:7px;border-left:1px solid var(--rule)}
+nav.toc a{color:var(--mut);text-decoration:none;display:block;padding-left:12px;margin-left:-1px;border-left:2px solid transparent}
+nav.toc a:hover,nav.toc a.on{color:var(--ink);border-left-color:var(--sun)}
+main{min-width:0}
+main>p,main>ul,main>ol,main>pre,main>h2{max-width:74ch}
+main>p:first-child{font-size:1.1rem}
+h2{font-size:1.5rem;line-height:1.2;letter-spacing:-.012em;font-weight:650;margin:2.6em 0 .55em;text-wrap:balance;
+  scroll-margin-top:20px}
+p{margin:0 0 1em}
+ul,ol{padding-left:1.25em;margin:0 0 1.1em}
+li{margin:.3em 0}
+strong{font-weight:650}
+pre{background:var(--soft);border:1px solid var(--rule);border-radius:8px;padding:14px 16px;overflow-x:auto;
+  font-family:var(--mono);font-size:.86rem;line-height:1.55;margin:0 0 1.2em}
+code{font-family:var(--mono);font-size:.9em}
+.glance{margin:28px 0 8px;max-width:none}
+.glance ul{list-style:none;padding:0;margin:0;display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);
+  border-radius:12px;overflow:hidden;grid-template-columns:minmax(0,1fr)}
+@media (min-width:480px){.glance ul{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:760px){.glance ul{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.glance li{background:var(--surface);margin:0;padding:16px 18px;font-size:.92rem;color:var(--mut);line-height:1.45}
+.glance li strong{display:block;color:var(--ink);font-size:1.45rem;letter-spacing:-.015em;margin-bottom:3px;
+  font-variant-numeric:tabular-nums}
+.tbl{overflow-x:auto;margin:0 0 1.4em}
+table{border-collapse:collapse;width:100%;font-size:.92rem;line-height:1.45}
+th,td{text-align:left;padding:9px 12px 9px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+th{color:var(--mut);font-weight:600;font-size:.84rem}
+td:first-child{font-weight:600;white-space:nowrap}
+td{font-variant-numeric:tabular-nums}
+figure{margin:26px 0 30px;min-width:0}
+figure .plot{min-height:200px}
+figure .frame{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:10px 8px 4px}
+figcaption{font-size:.86rem;color:var(--mut);line-height:1.5;margin-top:9px;max-width:80ch}
+.pair{display:grid;grid-template-columns:minmax(0,1fr);gap:0 22px;margin:0}
+@media (min-width:820px){.pair{grid-template-columns:repeat(2,minmax(0,1fr))}}
+a.ref{font-size:.78em;vertical-align:.25em;text-decoration:none;margin-left:1px;color:var(--pv)}
+ol.refs{font-size:.86rem;color:var(--mut);line-height:1.5;padding-left:1.4em;max-width:80ch}
+ol.refs li{margin:.45em 0;scroll-margin-top:20px;overflow-wrap:anywhere}
+ol.refs a{color:var(--pv)}
+footer{max-width:1180px;margin:0 auto;border-top:1px solid var(--rule);padding-block:22px 48px;color:var(--mut);font-size:.88rem}
+footer p{max-width:80ch}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="top"><h1>Same roof, twelve cities</h1><p class="deck">We ran one 3 kWp rooftop array through ten years of weather in twelve Indian cities to ask what really decides how much it makes: monsoon cloud or summer heat. The answer was neither.</p><p class="byline">By <b>Piyush Dash</b> · November 2026</p></header>
+<div class="page">
+<nav class="toc" aria-label="Contents"><p>Contents</p><ol><li><a href="#the-hunch-written-down-first">The hunch, written down first</a></li>
+<li><a href="#how-we-ran-it">How we ran it</a></li>
+<li><a href="#the-ranking">The ranking</a></li>
+<li><a href="#heat-is-a-tax-not-a-verdict">Heat is a tax, not a verdict</a></li>
+<li><a href="#the-monsoon-is-not-what-separates-cities">The monsoon is not what separates cities</a></li>
+<li><a href="#haze-more-than-cloud">Haze, more than cloud</a></li>
+<li><a href="#a-new-hypothesis">A new hypothesis</a></li>
+<li><a href="#how-we-worked">How we worked</a></li>
+<li><a href="#sources">Sources</a></li></ol></nav>
+<main><p>Our <a href="https://piyushdash94.github.io/rooftop-solar-analytics/">first article</a> followed one bifacial array on a roof in Bhubaneswar, using nine months of bills. It left us wondering how ordinary that roof is. Would the same panels make more in Jaipur, or less in Kolkata? And if they would, why?</p>
+<p>The obvious guesses are the two things everyone talks about in India: the monsoon, which buries the sky under cloud for four months, and the summer heat, which makes solar panels less efficient. We wrote down a hypothesis before running anything.</p>
+<h2 id="the-hunch-written-down-first">The hunch, written down first</h2>
+<p><strong>Hypothesis.</strong> Across Indian cities, monsoon cloud decides rooftop yield far more than summer heat.</p>
+<p>We set three tests and the bar each had to clear, before looking at any results.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Test</th>
+<th>What would support the hypothesis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(a) Sun or heat</td>
+<td>The spread across cities in sunlight on the panels is at least twice the spread caused by heat.</td>
+</tr>
+<tr>
+<td>(b) The monsoon's share</td>
+<td>June to September explains more than half of the difference in annual panel sunlight between cities.</td>
+</tr>
+<tr>
+<td>(c) Ranking</td>
+<td>A city's output ranks more closely with its monsoon sunlight than with its heat loss.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="how-we-ran-it">How we ran it</h2>
+<p>We kept everything about the array fixed and changed only the weather. Same 3 kWp of bifacial panels, same 12° tilt facing south, same dark concrete underneath, and the same system efficiency of 0.913 that we fitted to the Bhubaneswar bills. For each city we downloaded ten years of daily NASA POWER satellite weather, 2016 to 2025 <a class="ref" href="#ref-1">[1]</a>, and ran it through the physics model from the first article: sunlight on the panel plane, a heat correction from the module's datasheet <a class="ref" href="#ref-2">[2]</a>, then kilowatt-hours.</p>
+<p>Two checks before trusting it. Our fresh download for Bhubaneswar gives 4,521 kWh a year, within 0.1% of the 4,518 kWh typical year in the first article, which was calibrated on real bills. And the twelve cities average 4.4 kWh per kWp a day, inside the 3.5 to 4.5 band the World Bank reports for India <a class="ref" href="#ref-3">[3]</a>.</p>
+<p>One limitation matters. A fixed 12° tilt is close to ideal in the south and a little flat for the north, where the cities sit at up to 28.6° latitude. Tilting every array to its own latitude instead barely changes the order: the two rankings correlate at 0.99.</p>
+<h2 id="the-ranking">The ranking</h2>
+<figure><div class="frame"><div class="plot" data-fig="c_rank" role="img" aria-label="The same array, 12° south, dark concrete roof, run through 2016–2025 NASA weather in each city. Dot: ten-year average. Line: worst to best year. Green: Bhubaneswar."></div></div><figcaption>The same array, 12° south, dark concrete roof, run through 2016–2025 NASA weather in each city. Dot: ten-year average. Line: worst to best year. Green: Bhubaneswar.</figcaption></figure>
+<p>Ahmedabad comes first at 5,199 kWh a year and Kolkata last at 4,286, a gap of 21% from nothing but weather. Bhubaneswar is 10th of 12. The same panels on a roof in Ahmedabad would make about 15% more.</p>
+<h2 id="heat-is-a-tax-not-a-verdict">Heat is a tax, not a verdict</h2>
+<p>Test (a) passed easily. The spread in panel sunlight across cities is 7.4%; the spread in the heat factor is 0.6%, about 12 times smaller. Heat costs between 3.8% (Guwahati) and 6.1% (Ahmedabad) of output, and that range is narrow.</p>
+<figure><div class="frame"><div class="plot" data-fig="c_heat" role="img" aria-label="Each dot is a city. Hotter cities lose more to heat, yet they produce more: the sunshine that heats the panels outweighs what the heat takes away."></div></div><figcaption>Each dot is a city. Hotter cities lose more to heat, yet they produce more: the sunshine that heats the panels outweighs what the heat takes away.</figcaption></figure>
+<p>The surprise is the direction. The cities that lose most to heat produce the most. Ahmedabad's cells reach about 55 °C in its hottest month, against 42 °C in Guwahati, yet Ahmedabad tops the table. Output and heat loss rank together at +0.64. Heat is a tax on sunshine, and the sunniest cities can most afford it.</p>
+<h2 id="the-monsoon-is-not-what-separates-cities">The monsoon is not what separates cities</h2>
+<p>Tests (b) and (c) failed. June to September explains only 15% of the difference in annual panel sunlight between cities. Output ranks with monsoon sunlight at +0.47, below heat, and far below the dry months, at +0.89.</p>
+<figure><div class="frame"><div class="plot" data-fig="c_seasons" role="img" aria-label="Sunlight landing on the panels each season, cities in order of annual output. The monsoon slices are similar; winter and pre-monsoon slices are not."></div></div><figcaption>Sunlight landing on the panels each season, cities in order of annual output. The monsoon slices are similar; winter and pre-monsoon slices are not.</figcaption></figure>
+<figure><div class="frame"><div class="plot" data-fig="c_shares" role="img" aria-label="Left: each season&#x27;s share of the between-city spread in annual panel sunlight. Right: the spread in ground sunlight split into latitude, haze (what a cloud-free sky absorbs and scatters) and cloud."></div></div><figcaption>Left: each season&#x27;s share of the between-city spread in annual panel sunlight. Right: the spread in ground sunlight split into latitude, haze (what a cloud-free sky absorbs and scatters) and cloud.</figcaption></figure>
+<p>The monsoon dims every city, but it dims them by similar amounts, so it does little to change their order. Delhi has the 2nd brightest monsoon of the twelve and still finishes 8th. The difference is made in winter, which explains 43% of the gap, and the pre-monsoon months, which explain 30%. Bhubaneswar's panels collect 402 kWh/m² from December to February; Bengaluru's collect 517, 29% more.</p>
+<p>So the hypothesis, as written, is rejected. One of its three tests held.</p>
+<h2 id="haze-more-than-cloud">Haze, more than cloud</h2>
+<p>If the dry season decides, what decides the dry season? Sunlight can be lost in three places on the way down. Latitude sets how much arrives at the top of the atmosphere. The air itself scatters and absorbs some, even with no cloud in sight: dust, smoke, pollution and water vapour. Clouds take the rest. NASA's data gives all three: sunlight at the top of the atmosphere, sunlight under a cloud-free sky, and sunlight that actually arrived. Their ratios split the gap between cities into latitude, haze and cloud.</p>
+<p>Over the whole year, haze explains 42% of the gap in ground sunlight, cloud 30% and latitude 28%. In the dry months cloud falls to 18%, and haze (39%) and latitude (43%) do almost all the work.</p>
+<figure><div class="frame"><div class="plot" data-fig="c_haze" role="img" aria-label="Dry-season sky in each city. Further right: clearer cloud-free air. Higher: fewer clouds. Bubble size: annual output."></div></div><figcaption>Dry-season sky in each city. Further right: clearer cloud-free air. Higher: fewer clouds. Bubble size: annual output.</figcaption></figure>
+<p>The haziest dry-season skies belong to Kolkata, Lucknow, Bhubaneswar, Guwahati and Delhi, the eastern cities and the Indo-Gangetic Plain. A cloud-free sky over these cities lets through as little as 0.59 of the sunlight arriving at the top of the atmosphere, against up to 0.68 over the clearest. Bhubaneswar's figure is 0.61. This fits what field studies have found. Particles in the air and dust settled on the glass each cut solar output in India by similar amounts <a class="ref" href="#ref-4">[4]</a>, and aerosols during winter fog over the Indo-Gangetic Plain reduced surface sunlight by 5 to 35% in one detailed case study <a class="ref" href="#ref-5">[5]</a>. It also fits the first article, where Bhubaneswar's 42-year decline in sunlight was in the cloud-free sky, not in cloudiness.</p>
+<h2 id="a-new-hypothesis">A new hypothesis</h2>
+<p>The data points to a different story from the one we started with. <strong>Winter air clarity, not the monsoon or the heat, is what separates Indian cities for rooftop solar.</strong> That is a new claim, found in the data rather than tested on it, so it needs its own test. The natural one is independent: aerosol measurements from a different satellite instrument should rank the twelve cities' winter skies the same way NASA's clear-sky ratio does.</p>
+<p>Two smaller results are worth recording. Output is steady from year to year everywhere: its coefficient of variation is 1.8 to 3.1%. And the cities that lean hardest on the monsoon are not the ones whose output swings most (rank correlation −0.29).</p>
+<h2 id="how-we-worked">How we worked</h2>
+<ul>
+<li><strong>Data.</strong> NASA POWER daily point data for each city centre, 2016 to 2025. Sunlight comes from CERES satellite products at 1° resolution, so each "city" is really a 100 km grid cell.</li>
+<li><strong>Model.</strong> The physics model from the first article: daily diffuse split, sunlight on a 12° south-facing plane, NOCT cell temperature, one efficiency of 0.913 fitted on Bhubaneswar's bills and applied everywhere.</li>
+<li><strong>Tests.</strong> Three criteria written before running. Spreads are standard deviations of logarithms, so they read as percentages. Season and haze shares are covariance shares, which add up to 100%.</li>
+<li><strong>Limits.</strong> Twelve cities. The same tilt, roof and efficiency everywhere. Dust that settles on the panels is not modelled, and it can be as large a loss as dust in the air <a class="ref" href="#ref-4">[4]</a>. No tariffs or money: this is about kilowatt-hours only.</li>
+</ul>
+<h2 id="sources">Sources</h2>
+<ol class="refs"><li id="ref-1">NASA Langley Research Center, POWER Project. Data methodology: solar data from CERES SYN1deg and FLASHFlux at 1° × 1°; meteorology from MERRA-2 at ½° × ⅝°. <a href="https://power.larc.nasa.gov/docs/methodology/">https://power.larc.nasa.gov/docs/methodology/</a></li><li id="ref-2">Waaree Energies. Elite Series N-type BiN-01-555 to BiN-01-585 framed dual-glass bifacial module datasheet (WEL/E&amp;PD/555-585/108/BiN-01/HC/02, 03.01.2025): γ = −0.30 %/°C, NOCT 43 ± 2 °C, bifaciality 80 ± 10 %, backside gain table 15–30 %, 30-year power warranty (99 % after year 1, 87.4 % after year 30). <a href="https://rooftopsolarindia.com/datasheet/waaree-energies/datasheet-waaree-elite-n-type-bifacial-555W-560W-565W-570W-575W-580W-585W.pdf">https://rooftopsolarindia.com/datasheet/waaree-energies/datasheet-waaree-elite-n-type-bifacial-555W-560W-565W-570W-575W-580W-585W.pdf</a></li><li id="ref-3">World Bank / ESMAP and Solargis (2020). Global Photovoltaic Power Potential by Country. PVOUT assumes fixed, optimally tilted monofacial c-Si, 3.5% soiling and 7.5% other losses. <a href="https://documents1.worldbank.org/curated/en/466331592817725242/pdf/Global-Photovoltaic-Power-Potential-by-Country.pdf">https://documents1.worldbank.org/curated/en/466331592817725242/pdf/Global-Photovoltaic-Power-Potential-by-Country.pdf</a></li><li id="ref-4">Bergin, M. H., Ghoroi, C., Dixit, D., Schauer, J. J. and Shindell, D. T. (2017). Large reductions in solar energy production due to dust and particulate air pollution. Environmental Science &amp; Technology Letters 4, 339–344. doi:10.1021/acs.estlett.7b00197 <a href="https://pubs.acs.org/doi/10.1021/acs.estlett.7b00197">https://pubs.acs.org/doi/10.1021/acs.estlett.7b00197</a></li><li id="ref-5">Bharali, C., Barth, M., Kumar, R., Ghude, S. D., Sinha, V. and Sinha, B. (2024). Role of atmospheric aerosols in severe winter fog over the Indo-Gangetic Plain of India: a case study. Atmospheric Chemistry and Physics 24, 6635–6662. <a href="https://acp.copernicus.org/articles/24/6635/2024/">https://acp.copernicus.org/articles/24/6635/2024/</a></li></ol></main>
+</div>
+<footer><p>Data: NASA POWER daily satellite weather, 2016–2025, for twelve cities. Charts are interactive: hover for values.
+Code, data and the method behind every number: <a href="https://github.com/piyushdash94/rooftop-solar-analytics">github.com/piyushdash94/rooftop-solar-analytics</a>.</p></footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/4.1.1/plotly-cartesian.min.js"></script>
+<script>const FIGS={"c_rank":{"data":[{"customdata":[[1428.689327041452,4079.994930651678,4438.489722474703],[1438.208363647026,4229.578628223589,4484.713979680986],[1507.0660781600543,4253.9699234151785,4643.252732068197],[1516.4023624568829,4389.069656226204,4686.673891575703],[1546.734952232531,4458.243145090189,4770.014686800853],[1616.52057329808,4733.850972908315,5054.249397750857],[1648.5406373589715,4735.952358415002,5199.706230098001],[1653.6549023704158,4724.41921175624,5177.472495080506],[1688.578700957345,4903.307398062742,5226.493396969642],[1710.767078222926,4880.32684273844,5425.952636269544],[1713.2145906024741,4946.911491020966,5390.038058654788],[1733.0244618440017,5039.694876004343,5404.498707720143]],"error_x":{"array":[152.42174135034657,170.08888873990782,122.05449758803388,137.46680420505436,129.80983010326054,204.68767785661657,254.0843180210859,216.50778796925806,160.75729409760697,293.6514016007659,250.39428684736595,205.42532218813813],"arrayminus":[206.07305047267846,85.0464627174897,267.22831106498415,160.13743114444515,181.96171160740414,115.71074698592474,209.6695536619127,236.54549535500792,162.42870480929287,251.97439193033824,192.7322807864557,159.37850952766166],"color":"@mut/0.6","symmetric":false,"thickness":1.4,"type":"data","width":0},"hovertemplate":"%{y}: %{x:,.0f} kWh a year (%{customdata[0]:,.0f} kWh/kWp)<br>worst year %{customdata[1]:,.0f}, best %{customdata[2]:,.0f}<extra></extra>","marker":{"color":["@ink/0.7","@ink/0.7","@pv","@ink/0.7","@ink/0.7","@ink/0.7","@ink/0.7","@ink/0.7","@ink/0.7","@ink/0.7","@ink/0.7","@ink/0.7"],"size":[10,10,13,10,10,10,10,10,10,10,10,10]},"mode":"markers","x":[4286.067981124356,4314.625090941078,4521.198234480163,4549.207087370649,4640.204856697593,4849.56171989424,4945.621912076915,4960.964707111248,5065.736102872035,5132.301234668778,5139.643771807422,5199.073385532005],"y":["Kolkata","Guwahati","Bhubaneswar","Lucknow","Delhi","Chennai","Hyderabad","Mumbai","Thiruvananthapuram","Jaipur","Bengaluru","Ahmedabad"],"type":"scatter"},{"hoverinfo":"skip","mode":"text","text":["4,286","4,315","4,521","4,549","4,640","4,850","4,946","4,961","5,066","5,132","5,140","5,199"],"textfont":{"color":"@mut","size":11},"textposition":"middle right","x":[4456.489722474703,4502.713979680986,4661.252732068197,4704.673891575703,4788.014686800853,5072.249397750857,5217.706230098001,5195.472495080506,5244.493396969642,5443.952636269544,5408.038058654788,5422.498707720143],"y":["Kolkata","Guwahati","Bhubaneswar","Lucknow","Delhi","Chennai","Hyderabad","Mumbai","Thiruvananthapuram","Jaipur","Bengaluru","Ahmedabad"],"type":"scatter"}],"layout":{"margin":{"l":8,"r":8,"t":8,"b":8},"font":{"family":"\"Source Sans 3\", \"Source Sans Pro\", system-ui, -apple-system, \"Segoe UI\", \"DejaVu Sans\", sans-serif","size":13,"color":"@mut"},"hoverlabel":{"font":{"family":"\"Source Sans 3\", \"Source Sans Pro\", system-ui, -apple-system, \"Segoe UI\", \"DejaVu Sans\", sans-serif","size":12}},"legend":{"font":{"size":12,"color":"@ink"},"orientation":"h","yanchor":"bottom","y":1.0,"xanchor":"left","x":0,"bgcolor":"rgba(0,0,0,0)"},"height":420,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)","showlegend":false,"bargap":0.25,"xaxis":{"tickfont":{"color":"@mut"},"title":{"font":{"size":12,"color":"@mut"},"text":"kWh a year from the same 3 kWp array (dot: ten-year average; line: worst to best year)"},"showgrid":true,"linecolor":"@grid","ticks":"","automargin":true,"range":[4000,5600],"gridcolor":"@grid"},"yaxis":{"tickfont":{"color":"@mut"},"title":{"font":{"size":12,"color":"@mut"}},"gridcolor":"@grid","zeroline":false,"linecolor":"@grid","automargin":true},"autosize":true}},"c_heat":{"data":[{"customdata":[[54.57783471459474],[47.99439477938643],[52.184226880172105],[48.75690304653086],[50.76116224566146],[50.62922023115044],[49.303864058591266],[51.66494808368621],[52.153515501502795],[49.427082916489155],[41.84186338280873],[47.708224110420986]],"hovertemplate":"%{text}: heat costs %{x:.1f}%, output %{y:,.0f} kWh<br>hottest month's cells %{customdata[0]:.0f} \u00b0C<extra></extra>","marker":{"color":["@pv/0.35","@pv/0.35","@pv/0.35","@pv/0.35","@pv/0.35","@pv/0.35","@pv/0.35","@pv/0.35","@pv/0.35","@pv","@pv/0.35","@pv/0.35"],"line":{"color":"@card","width":1},"size":11},"mode":"markers+text","text":["Ahmedabad","Bengaluru","Jaipur","Thiruvananthapuram","Mumbai","Hyderabad","Chennai","Delhi","Lucknow","Bhubaneswar","Guwahati","Kolkata"],"textfont":{"color":"@mut","size":11},"textposition":["top center","bottom center","top left","top left","bottom right","bottom right","top center","top left","bottom right","bottom left","top center","top right"],"x":[6.0981091925066515,4.816465166546413,5.383179493015,5.736295060664354,5.682322669885853,5.3167734329032985,5.807797900554112,5.179515213284558,5.19514736964044,5.065719096182808,3.8285389948633175,4.723852511281379],"y":[5199.073385532005,5139.643771807422,5132.301234668778,5065.736102872035,4960.964707111248,4945.621912076915,4849.56171989424,4640.204856697593,4549.207087370649,4521.198234480163,4314.625090941078,4286.067981124356],"type":"scatter"}],"layout":{"margin":{"l":8,"r":8,"t":8,"b":8},"font":{"family":"\"Source Sans 3\", \"Source Sans Pro\", system-ui, -apple-system, \"Segoe UI\", \"DejaVu Sans\", sans-serif","size":13,"color":"@mut"},"hoverlabel":{"font":{"family":"\"Source Sans 3\", \"Source Sans Pro\", system-ui, -apple-system, \"Segoe UI\", \"DejaVu Sans\", sans-serif","size":12}},"legend":{"font":{"size":12,"color":"@ink"},"orientation":"h","yanchor":"bottom","y":1.0,"xanchor":"left","x":0,"bgcolor":"rgba(0,0,0,0)"},"height":320,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)","showlegend":false,"bargap":0.25,"xaxis":{"tickfont":{"color":"@mut"},"title":{"font":{"size":12,"color":"@mut"},"text":"share of output lost to panel heat, %"},"showgrid":false,"linecolor":"@grid","ticks":"","automargin":true,"range":[3.4,6.5]},"yaxis":{"tickfont":{"color":"@mut"},"title":{"font":{"size":12,"color":"@mut"},"text":"kWh a year"},"gridcolor":"@grid","zeroline":false,"linecolor":"@grid","automargin":true},"autosize":true}},"c_seasons":{"data":[{"hovertemplate":"%{x}, Winter (Dec\u2013Feb): %{y:.0f} kWh/m\u00b2<extra></extra>","marker":{"color":"@rain/0.35"},"name":"Winter (Dec\u2013Feb)","x":["Ahmedabad","Bengaluru","Jaipur","Thiruvananthapuram","Mumbai","Hyderabad","Chennai","Delhi","Lucknow","Bhubaneswar","Guwahati","Kolkata"],"y":[477.01890471157355,517.0909508395922,433.90271465068673,529.5221050952366,480.35576147623595,475.1017600086717,466.32757206221197,335.5293299548889,327.1915863539647,402.18876776841313,369.76747790271145,359.5041318104045],"type":"bar"},{"hovertemplate":"%{x}, Pre-monsoon (Mar\u2013May): %{y:.0f} kWh/m\u00b2<extra></extra>","marker":{"color":"@sun"},"name":"Pre-monsoon (Mar\u2013May)","x":["Ahmedabad","Bengaluru","Jaipur","Thiruvananthapuram","Mumbai","Hyderabad","Chennai","Delhi","Lucknow","Bhubaneswar","Guwahati","Kolkata"],"y":[641.8139336327246,577.0136744227882,612.4469116096429,529.6525049554308,614.3665691215624,574.4117247055954,562.0292274303767,580.2295871757731,582.1928462171409,537.3282528522484,444.4474713145728,504.28985641427107],"type":"bar"},{"hovertemplate":"%{x}, Monsoon (Jun\u2013Sep): %{y:.0f} kWh/m\u00b2<extra></extra>","marker":{"color":"@rain"},"name":"Monsoon (Jun\u2013Sep)","x":["Ahmedabad","Bengaluru","Jaipur","Thiruvananthapuram","Mumbai","Hyderabad","Chennai","Delhi","Lucknow","Bhubaneswar","Guwahati","Kolkata"],"y":[573.0372044581242,584.1458087713721,628.6086511043244,604.1107199713312,508.545212598087,549.042944000048,580.0369686236397,605.1163259948532,577.4553828221694,514.6195828039029,543.2737414451537,513.6815157764198],"type":"bar"},{"hovertemplate":"%{x}, Post-monsoon (Oct\u2013Nov): %{y:.0f} kWh/m\u00b2<extra></extra>","marker":{"color":"@sun/0.45"},"name":"Post-monsoon (Oct\u2013Nov)","x":["Ahmedabad","Bengaluru","Jaipur","Thiruvananthapuram","Mumbai","Hyderabad","Chennai","Delhi","Lucknow","Bhubaneswar","Guwahati","Kolkata"],"y":[329.121298114775,292.73780314506496,305.0027020022211,298.316684624151,316.6646135161569,308.0484728841601,270.92470644226245,265.39772218149693,264.69180510863066,284.23783232609634,280.11833705773245,264.5795336330546],"type":"bar"}],"layout":{"margin":{"l":8,"r":8,"t":8,"b":8},"font":{"family":"\"Source Sans 3\", \"Source Sans Pro\", system-ui, -apple-system, \"Segoe UI\", \"DejaVu Sans\", sans-serif","size":13,"color":"@mut"},"hoverlabel":{"font":{"family":"\"Source Sans 3\", \"Source Sans Pro\", system-ui, -apple-system, \"Segoe UI\", \"DejaVu Sans\", sans-serif","size":12}},"legend":{"font":{"size":12,"color":"@ink"},"orientation":"h","yanchor":"bottom","y":1.0,"xanchor":"left","x":0,"bgcolor":"rgba(0,0,0,0)","traceorder":"normal"},"height":340,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)","showlegend":true,"bargap":0.25,"barmode":"stack","xaxis":{"tickfont":{"color":"@mut"},"title":{"font":{"size":12,"color":"@mut"}},"showgrid":false,"linecolor":"@grid","ticks":"","automargin":true,"tickangle":-35},"yaxis":{"tickfont":{"color":"@mut"},"title":{"font":{"size":12,"color":"@mut"},"text":"sunlight on the panels, kWh/m\u00b2 a year"},"gridcolor":"@grid","zeroline":false,"linecolor":"@grid","automargin":true},"autosize":true}},"c_shares":{"data":[{"cliponaxis":false,"hovertemplate":"%{x}: %{y:.0f}% of the between-city spread<extra></extra>","marker":{"color":["@rain/0.45","@sun","@rain","@sun/0.5"]},"showlegend":false,"text":["43%","30%","15%","12%"],"textposition":"outside","x":["Winter","Pre-monsoon","Monsoon","Post-monsoon"],"y":[42.71373910951945,30.168242966270892,14.759976550313535,12.358041373896118],"type":"bar","xaxis":"x","yaxis":"y"},{"cliponaxis":false,"hovertemplate":"Whole year, %{x}: %{y:.0f}%<extra></extra>","marker":{"color":"@ink/0.75"},"name":"Whole year","text":["28%","42%","30%"],"textposition":"outside","x":["Latitude","Haze","Cloud"],"y":[27.797076490728088,42.220816806394666,29.982106702877793],"type":"bar","xaxis":"x2","yaxis":"y2"},{"cliponaxis":false,"hovertemplate":"Dry months (Oct\u2013May), %{x}: %{y:.0f}%<extra></extra>","marker":{"color":"@sun"},"name":"Dry months (Oct\u2013May)","text":["43%","39%","18%"],"textposition":"outside","x":["Latitude","Haze","Cloud"],"y":[43.33414625370914,38.998872988704356,17.66698075758641],"type":"bar","xaxis":"x2","yaxis":"y2"}],"layout":{"xaxis":{"anchor":"y","domain":[0.0,0.44],"tickfont":{"color":"@mut"},"title":{"font":{"size":12,"color":"@mut"}},"showgrid":false,"linecolor":"@grid","ticks":"","automargin":true},"yaxis":{"anchor":"x","domain":[0.0,1.0],"tickfont":{"color":"@mut"},"title":{"font":{"size":12,"color":"@mut"},"text":"share of the gap between cities, %"},"gridcolor":"@grid","zeroline":false,"linecolor":"@grid","automargin":true,"range":[0,52]},"xaxis2":{"anchor":"y2","domain":[0.56,1.0],"tickfont":{"color":"@mut"},"title":{"font":{"size":12,"color":"@mut"}},"showgrid":false,"linecolor":"@grid","ticks":"","automargin":true},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"tickfont":{"color":"@mut"},"title":{"font":{"size":12,"color":"@mut"}},"gridcolor":"@grid","zeroline":false,"linecolor":"@grid","automargin":true,"range":[0,52]},"annotations":[{"font":{"size":12,"color":"@ink"},"showarrow":false,"text":"Which season separates the cities","x":0.22,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":12,"color":"@ink"},"showarrow":false,"text":"Why: latitude, haze or cloud","x":0.78,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"margin":{"l":8,"r":8,"t":34,"b":8},"font":{"family":"\"Source Sans 3\", \"Source Sans Pro\", system-ui, -apple-system, \"Segoe UI\", \"DejaVu Sans\", sans-serif","size":13,"color":"@mut"},"hoverlabel":{"font":{"family":"\"Source Sans 3\", \"Source Sans Pro\", system-ui, -apple-system, \"Segoe UI\", \"DejaVu Sans\", sans-serif","size":12}},"legend":{"font":{"size":12,"color":"@ink"},"orientation":"h","yanchor":"bottom","y":-0.18,"xanchor":"left","x":0.56,"bgcolor":"rgba(0,0,0,0)"},"height":330,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)","showlegend":true,"bargap":0.25,"barmode":"group","autosize":true}},"c_haze":{"data":[{"customdata":[[5199.073385532005],[5139.643771807422],[5132.301234668778],[5065.736102872035],[4960.964707111248],[4945.621912076915],[4849.56171989424],[4640.204856697593],[4549.207087370649],[4521.198234480163],[4314.625090941078],[4286.067981124356]],"hovertemplate":"%{text}: cloud-free sky passes %{x:.2f}, clouds pass %{y:.2f}<br>%{customdata[0]:,.0f} kWh a year<extra></extra>","marker":{"color":["@pv/0.35","@pv/0.35","@pv/0.35","@pv/0.35","@pv/0.35","@pv/0.35","@pv/0.35","@pv/0.35","@pv/0.35","@pv","@pv/0.35","@pv/0.35"],"line":{"color":"@card","width":1},"size":[28.868297456266777,27.54763937349827,27.384471881528405,25.905246730489672,23.57699349136106,23.236042490598102,21.101371553205333,16.44899681550206,14.426824163792197,13.804405210670282,9.213890909801739,8.57928846943014]},"mode":"markers+text","text":["Ahmedabad","Bengaluru","Jaipur","Thiruvananthapuram","Mumbai","Hyderabad","Chennai","Delhi","Lucknow","Bhubaneswar","Guwahati","Kolkata"],"textfont":{"color":"@mut","size":11},"textposition":["top left","bottom center","bottom left","bottom right","top center","top left","top left","top right","top center","bottom right","bottom center","bottom center"],"x":[0.6805523467855391,0.6757647369828809,0.6814227263559477,0.6539600095733679,0.6519614733427435,0.6482113552833983,0.6442531141831311,0.6256479845008357,0.6097710666145313,0.6137565388856452,0.6226692778325801,0.5881491135960144],"y":[0.9596927426756502,0.8683163631926478,0.929057059640168,0.8588872336711083,0.9519100210426613,0.9116093642431653,0.8601734815554832,0.9186072043343093,0.9231577417196981,0.8948432768206551,0.8244738811282868,0.8824253114831003],"type":"scatter"}],"layout":{"margin":{"l":8,"r":8,"t":8,"b":8},"font":{"family":"\"Source Sans 3\", \"Source Sans Pro\", system-ui, -apple-system, \"Segoe UI\", \"DejaVu Sans\", sans-serif","size":13,"color":"@mut"},"hoverlabel":{"font":{"family":"\"Source Sans 3\", \"Source Sans Pro\", system-ui, -apple-system, \"Segoe UI\", \"DejaVu Sans\", sans-serif","size":12}},"legend":{"font":{"size":12,"color":"@ink"},"orientation":"h","yanchor":"bottom","y":1.0,"xanchor":"left","x":0,"bgcolor":"rgba(0,0,0,0)"},"height":340,"paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)","showlegend":false,"bargap":0.25,"xaxis":{"tickfont":{"color":"@mut"},"title":{"font":{"size":12,"color":"@mut"},"text":"haze: cloud-free sky \u00f7 top of atmosphere (dry months)"},"showgrid":false,"linecolor":"@grid","ticks":"","automargin":true,"range":[0.575,0.695]},"yaxis":{"tickfont":{"color":"@mut"},"title":{"font":{"size":12,"color":"@mut"},"text":"cloud: actual \u00f7 cloud-free sky (dry months)"},"gridcolor":"@grid","zeroline":false,"linecolor":"@grid","automargin":true,"range":[0.8,0.98]},"autosize":true}}};</script>
+<script>
+const TOK=['ink','mut','grid','card','sun','rain','pv','dim','hi','ramp0','ramp1'];
+function tokens(){const cs=getComputedStyle(document.documentElement),o={};TOK.forEach(k=>o[k]=cs.getPropertyValue('--c-'+k).trim());return o}
+function rgba(hex,a){const h=hex.replace('#','');return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`}
+function res(v,t){if(typeof v==='string'&&v[0]==='@'){const[n,a]=v.slice(1).split('/');return t[n]?(a?rgba(t[n],a):t[n]):v}
+ if(Array.isArray(v))return v.map(x=>res(x,t));if(v&&typeof v==='object'){const o={};for(const k in v)o[k]=res(v[k],t);return o}return v}
+const FONT=getComputedStyle(document.documentElement).getPropertyValue('--font');
+function draw(){const t=tokens();document.querySelectorAll('.plot').forEach(el=>{const f=res(FIGS[el.dataset.fig],t);
+ f.layout.font=Object.assign({},f.layout.font,{family:FONT});
+ if(window.innerWidth<560&&f.layout.legend){f.layout.legend.font=Object.assign({},f.layout.legend.font,{size:11})}
+ if(window.innerWidth<560&&el.dataset.fig==='calendar'){f.data.forEach(t=>{if(t.marker&&Array.isArray(t.marker.size))t.marker.size=t.marker.size.map(s=>s*0.45)})}
+ el.style.height=(f.layout.height||320)+'px';
+ Plotly.react(el,f.data,f.layout,{displayModeBar:false,responsive:true,scrollZoom:false})})}
+function boot(){if(!window.Plotly){document.querySelectorAll('.plot').forEach(el=>el.textContent='Interactive chart could not load (plotly.js unavailable).');return}
+ draw();
+ new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+ const links=[...document.querySelectorAll('nav.toc a')],heads=links.map(a=>document.getElementById(a.hash.slice(1)));
+ const spy=()=>{let i=0;heads.forEach((h,j)=>{if(h&&h.getBoundingClientRect().top<140)i=j});links.forEach((a,j)=>a.classList.toggle('on',j===i))};
+ addEventListener('scroll',spy,{passive:true});spy()}
+boot();
+</script>
+</body>
+</html>

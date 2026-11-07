@@ -27,7 +27,9 @@ article/article.md             the prose. [[fact]] placeholders, {{fig:id}} / {{
 scripts/build_article.py       renders site/index.html, article/blog.md, article/figures/*.png,
                                article/rooftop-solar-article.pdf and FINDINGS.md
 app/streamlit_app.py           interactive companion; same story + figures, plus what-if sliders
-tests/                         33 tests; test_story.py pins the article's conclusions
+tests/                         41 tests; test_story.py / test_cities.py pin each document's conclusions
+research/cities.md             second document: same array in 12 cities (cities.py, CITY_FIGURES);
+                               built by build_article.py into site/cities/ and research/
 ```
 
 Never hand-edit `site/index.html`, `article/blog.md`, `FINDINGS.md` or the PNGs/PDF. Edit
@@ -116,6 +118,19 @@ Verdict: < −4.7 dust, > +1.4 heat, else sky; Nov→Feb fall ≥ 5 points also 
 Misclassification ~21% (sky→dust), ~13% (sky→heat). Score new winter bills with
 `experiment["outcome"]` (frozen residuals), never by refitting. `test_preregistered_winter_test_is_frozen`
 guards the constants. When Dec and Jan bills are in, report the verdict whichever way it falls.
+
+## Research page: same roof, twelve cities (2026-11-08)
+
+`cities.py`: the Bhubaneswar array (12° S, albedo 0.12, η 0.9132) run through NASA POWER 2016–2025 for
+12 city centres (`data/cities.csv`, `data/raw/cities/`). Hypothesis written first: monsoon cloud
+decides yield more than heat. Tests: (a) sun spread ≥ 2× heat spread — supported (7.4% vs 0.6%);
+(b) Jun–Sep > 50% of between-city variance in panel sunlight — rejected (15%; winter 43%, pre 30%);
+(c) yield ranks more with monsoon sun than heat loss — rejected (+0.47 vs +0.64; dry months +0.89).
+Decomposition of ln GHI into latitude / haze (clear-sky ÷ TOA) / cloud (all-sky ÷ clear-sky):
+annual 28/42/30%, dry months 43/39/18%. Ahmedabad 5,199 top, Kolkata 4,286 last, Bhubaneswar 10th
+(4,521, within 0.1% of the article). Tilt = latitude keeps the ranking (ρ 0.99). "Winter air
+clarity separates cities" is a NEW hypothesis from the data, not a tested result; say so.
+Settled-dust soiling is not modelled. No money on this page, kWh only.
 
 ## Metric definitions — do not drift
 

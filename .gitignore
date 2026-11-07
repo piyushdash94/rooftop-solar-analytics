@@ -18,5 +18,7 @@ data/raw/*
 !data/raw/nasa_power_daily.csv
 !data/raw/nasa_power_daily_2016_2025.csv
 !data/raw/nasa_power_monthly_1984_2025.csv
+!data/raw/cities/
 # build scratch
 article/.print.html
+research/.print.html

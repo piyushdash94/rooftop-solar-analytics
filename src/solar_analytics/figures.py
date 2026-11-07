@@ -554,3 +554,121 @@ FIGURES = {
 
 def build_all(B) -> dict[str, go.Figure]:
     return {k: fn(B) for k, (fn, _) in FIGURES.items()}
+
+
+# --------------------------------------------------------------------------- twelve cities (research/cities.md)
+
+def _city_col(c):
+    return col("pv") if c == "Bhubaneswar" else col("pv", .35)
+
+
+def fig_c_rank(R):
+    D = sorted(R["cities"], key=lambda d: d["kwh"])
+    fig = go.Figure(go.Scatter(
+        y=[d["city"] for d in D], x=[d["kwh"] for d in D], mode="markers",
+        marker=dict(size=[13 if d["city"] == "Bhubaneswar" else 10 for d in D],
+                    color=[col("pv") if d["city"] == "Bhubaneswar" else col("ink", .7) for d in D]),
+        error_x=dict(type="data", symmetric=False, array=[d["best"] - d["kwh"] for d in D],
+                     arrayminus=[d["kwh"] - d["worst"] for d in D], color=col("mut", .6), thickness=1.4, width=0),
+        customdata=[[d["yield"], d["worst"], d["best"]] for d in D],
+        hovertemplate="%{y}: %{x:,.0f} kWh a year (%{customdata[0]:,.0f} kWh/kWp)"
+                      "<br>worst year %{customdata[1]:,.0f}, best %{customdata[2]:,.0f}<extra></extra>"))
+    fig.add_trace(go.Scatter(x=[d["best"] + 18 for d in D], y=[d["city"] for d in D], mode="text",
+                             text=[f"{d['kwh']:,.0f}" for d in D], textposition="middle right",
+                             textfont=dict(size=11, color=col("mut")), hoverinfo="skip"))
+    _base(fig, 420, legend=False)
+    fig.update_xaxes(title_text="kWh a year from the same 3 kWp array (dot: ten-year average; line: worst to best year)",
+                     range=[4000, 5600], showgrid=True, gridcolor=col("grid"))
+    return fig
+
+
+def fig_c_seasons(R):
+    D = sorted(R["cities"], key=lambda d: -d["kwh"])
+    names = {"winter": ("Winter (Dec–Feb)", col("rain", .35)), "pre": ("Pre-monsoon (Mar–May)", col("sun")),
+             "monsoon": ("Monsoon (Jun–Sep)", col("rain")), "post": ("Post-monsoon (Oct–Nov)", col("sun", .45))}
+    fig = go.Figure()
+    for k, (n, c) in names.items():
+        fig.add_trace(go.Bar(x=[d["city"] for d in D], y=[d[f"poa_{k}"] for d in D], name=n, marker_color=c,
+                             hovertemplate="%{x}, " + n + ": %{y:.0f} kWh/m²<extra></extra>"))
+    _base(fig, 340, barmode="stack")
+    fig.update_layout(legend=dict(traceorder="normal"))
+    fig.update_yaxes(title_text="sunlight on the panels, kWh/m² a year")
+    fig.update_xaxes(tickangle=-35)
+    return fig
+
+
+def fig_c_shares(R):
+    S, Dc, Dd = R["season_share"], R["decomp"], R["decomp_dry"]
+    fig = make_subplots(rows=1, cols=2, horizontal_spacing=0.12,
+                        subplot_titles=["Which season separates the cities", "Why: latitude, haze or cloud"])
+    sl = [("Winter", S["winter"], col("rain", .45)), ("Pre-monsoon", S["pre"], col("sun")),
+          ("Monsoon", S["monsoon"], col("rain")), ("Post-monsoon", S["post"], col("sun", .5))]
+    fig.add_trace(go.Bar(x=[s[0] for s in sl], y=[s[1] * 100 for s in sl], marker_color=[s[2] for s in sl],
+                         text=[f"{s[1] * 100:.0f}%" for s in sl], textposition="outside", cliponaxis=False,
+                         showlegend=False, hovertemplate="%{x}: %{y:.0f}% of the between-city spread<extra></extra>"),
+                  row=1, col=1)
+    for name, d, c in (("Whole year", Dc, col("ink", .75)), ("Dry months (Oct–May)", Dd, col("sun"))):
+        ks = ["latitude", "haze", "cloud"]
+        fig.add_trace(go.Bar(x=["Latitude", "Haze", "Cloud"], y=[d[k] * 100 for k in ks], name=name, marker_color=c,
+                             text=[f"{d[k] * 100:.0f}%" for k in ks], textposition="outside", cliponaxis=False,
+                             hovertemplate=name + ", %{x}: %{y:.0f}%<extra></extra>"), row=1, col=2)
+    _base(fig, 330)
+    fig.update_layout(margin=dict(l=8, r=8, t=34, b=8), barmode="group",
+                      legend=dict(orientation="h", y=-0.18, x=0.56))
+    fig.update_yaxes(title_text="share of the gap between cities, %", range=[0, 52], row=1, col=1)
+    fig.update_yaxes(range=[0, 52], row=1, col=2)
+    fig.update_annotations(font=dict(size=12, color=col("ink")))
+    return fig
+
+
+def fig_c_heat(R):
+    D = R["cities"]
+    pos = {"Bengaluru": "bottom center", "Jaipur": "top left", "Thiruvananthapuram": "top left",
+           "Mumbai": "bottom right", "Hyderabad": "bottom right", "Chennai": "top center", "Lucknow": "bottom right",
+           "Delhi": "top left", "Bhubaneswar": "bottom left", "Kolkata": "top right"}
+    fig = go.Figure(go.Scatter(
+        x=[d["heat_loss"] * 100 for d in D], y=[d["kwh"] for d in D], mode="markers+text",
+        text=[d["city"] for d in D], textposition=[pos.get(d["city"], "top center") for d in D],
+        textfont=dict(size=11, color=col("mut")),
+        marker=dict(size=11, color=[_city_col(d["city"]) for d in D], line=dict(width=1, color=col("card"))),
+        customdata=[[d["t_cell_peak"]] for d in D],
+        hovertemplate="%{text}: heat costs %{x:.1f}%, output %{y:,.0f} kWh"
+                      "<br>hottest month's cells %{customdata[0]:.0f} °C<extra></extra>"))
+    _base(fig, 320, legend=False)
+    fig.update_xaxes(title_text="share of output lost to panel heat, %", range=[3.4, 6.5])
+    fig.update_yaxes(title_text="kWh a year")
+    return fig
+
+
+def fig_c_haze(R):
+    D = R["cities"]
+    pos = {"Kolkata": "bottom center", "Lucknow": "top center", "Bhubaneswar": "bottom right",
+           "Guwahati": "bottom center", "Delhi": "top right", "Chennai": "top left",
+           "Hyderabad": "top left", "Mumbai": "top center", "Thiruvananthapuram": "bottom right",
+           "Bengaluru": "bottom center", "Jaipur": "bottom left", "Ahmedabad": "top left"}
+    fig = go.Figure(go.Scatter(
+        x=[d["haze_dry"] for d in D], y=[d["cloud_dry"] for d in D], mode="markers+text",
+        text=[d["city"] for d in D], textposition=[pos.get(d["city"], "top center") for d in D],
+        textfont=dict(size=11, color=col("mut")),
+        marker=dict(size=[(d["kwh"] - 3900) / 45 for d in D], color=[_city_col(d["city"]) for d in D],
+                    line=dict(width=1, color=col("card"))),
+        customdata=[[d["kwh"]] for d in D],
+        hovertemplate="%{text}: cloud-free sky passes %{x:.2f}, clouds pass %{y:.2f}"
+                      "<br>%{customdata[0]:,.0f} kWh a year<extra></extra>"))
+    _base(fig, 340, legend=False)
+    fig.update_xaxes(title_text="haze: cloud-free sky ÷ top of atmosphere (dry months)", range=[0.575, 0.695])
+    fig.update_yaxes(title_text="cloud: actual ÷ cloud-free sky (dry months)", range=[0.8, 0.98])
+    return fig
+
+
+CITY_FIGURES = {
+    "c_rank": (fig_c_rank, "The same array, 12° south, dark concrete roof, run through 2016–2025 NASA weather in each city. Dot: ten-year average. Line: worst to best year. Green: Bhubaneswar."),
+    "c_heat": (fig_c_heat, "Each dot is a city. Hotter cities lose more to heat, yet they produce more: the sunshine that heats the panels outweighs what the heat takes away."),
+    "c_seasons": (fig_c_seasons, "Sunlight landing on the panels each season, cities in order of annual output. The monsoon slices are similar; winter and pre-monsoon slices are not."),
+    "c_shares": (fig_c_shares, "Left: each season's share of the between-city spread in annual panel sunlight. Right: the spread in ground sunlight split into latitude, haze (what a cloud-free sky absorbs and scatters) and cloud."),
+    "c_haze": (fig_c_haze, "Dry-season sky in each city. Further right: clearer cloud-free air. Higher: fewer clouds. Bubble size: annual output."),
+}
+
+
+def build_cities(R) -> dict[str, go.Figure]:
+    return {k: fn(R) for k, (fn, _) in CITY_FIGURES.items()}

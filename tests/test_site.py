@@ -63,3 +63,12 @@ def test_light_theme_only():
     """The page stays white even on a device in dark mode."""
     assert "prefers-color-scheme: dark" not in HTML and 'data-theme="dark"' not in HTML
     assert '<meta name="color-scheme" content="light">' in HTML
+
+
+def test_cities_page_complete():
+    import re
+    page = (ROOT / "site" / "cities" / "index.html").read_text(encoding="utf-8")
+    assert "<title>Same roof, twelve cities</title>" in page
+    assert not re.search(r"\[\[[a-z_]+\]\]|\{\{(fig|figs|ref):", page)
+    for fid in ("c_rank", "c_heat", "c_seasons", "c_shares", "c_haze"):
+        assert f'data-fig="{fid}"' in page

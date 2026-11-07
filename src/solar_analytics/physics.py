@@ -42,10 +42,13 @@ def load_daily(path: Path | str | None = None) -> pd.DataFrame:
     return df
 
 
-def _beam_tilt_factor(days: pd.DatetimeIndex, tilt: float, azimuth: float) -> pd.Series:
+def _beam_tilt_factor(days: pd.DatetimeIndex, tilt: float, azimuth: float,
+                      lat: float | None = None, lon: float | None = None) -> pd.Series:
     import pvlib
 
-    loc = pvlib.location.Location(SITE.latitude, SITE.longitude, tz=SITE.timezone)
+    lat = SITE.latitude if lat is None else lat
+    lon = SITE.longitude if lon is None else lon
+    loc = pvlib.location.Location(lat, lon, tz=SITE.timezone)
     times = pd.date_range(days[0].normalize(), days[-1].normalize() + pd.Timedelta("1D"),
                           freq="15min", tz=SITE.timezone)[:-1]
     sp = loc.get_solarposition(times)
@@ -63,8 +66,12 @@ def _beam_tilt_factor(days: pd.DatetimeIndex, tilt: float, azimuth: float) -> pd
 
 def effective_irradiation(w: pd.DataFrame, tilt: float | None = None,
                           azimuth: float | None = None,
-                          albedo: float | None = None) -> pd.DataFrame:
-    """Add kt, poa, f_temp and e_eff columns to a daily NASA POWER frame."""
+                          albedo: float | None = None, lat: float | None = None,
+                          lon: float | None = None) -> pd.DataFrame:
+    """Add kt, poa, f_temp and e_eff columns to a daily NASA POWER frame.
+
+    lat/lon default to the site; pass them to run the same array somewhere else.
+    """
     tilt = SITE.tilt_deg if tilt is None else tilt
     azimuth = SITE.azimuth_deg if azimuth is None else azimuth
     albedo = SITE.ground_albedo if albedo is None else albedo
@@ -72,10 +79,11 @@ def effective_irradiation(w: pd.DataFrame, tilt: float | None = None,
     ghi = w["ALLSKY_SFC_SW_DWN"]
     doy = w.index.dayofyear
     decl = np.radians(23.45 * np.sin(np.radians(360 * (284 + doy) / 365)))
-    lat = np.radians(SITE.latitude)
-    ws = np.arccos(np.clip(-np.tan(lat) * np.tan(decl), -1, 1))
+    lat_deg = SITE.latitude if lat is None else lat
+    lat_r = np.radians(lat_deg)
+    ws = np.arccos(np.clip(-np.tan(lat_r) * np.tan(decl), -1, 1))
     h0 = (24 / np.pi) * 1367.0 * (1 + 0.033 * np.cos(np.radians(360 * doy / 365))) * (
-        np.cos(lat) * np.cos(decl) * np.sin(ws) + ws * np.sin(lat) * np.sin(decl)) / 1000.0
+        np.cos(lat_r) * np.cos(decl) * np.sin(ws) + ws * np.sin(lat_r) * np.sin(decl)) / 1000.0
     kt = (ghi / h0).clip(0, 1)
 
     fd = pd.Series(index=kt.index, dtype=float)              # Erbs daily diffuse fraction
@@ -89,7 +97,7 @@ def effective_irradiation(w: pd.DataFrame, tilt: float | None = None,
 
     diffuse = ghi * fd
     beam = ghi - diffuse
-    rb = _beam_tilt_factor(w.index, tilt, azimuth).reindex(w.index).ffill()
+    rb = _beam_tilt_factor(w.index, tilt, azimuth, lat_deg, lon).reindex(w.index).ffill()
     t = np.radians(tilt)
     poa = beam * rb + diffuse * (1 + np.cos(t)) / 2 + ghi * albedo * (1 - np.cos(t)) / 2
 
