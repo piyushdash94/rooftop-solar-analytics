@@ -33,9 +33,9 @@ def test_panels_fixed_at_installed_angle():
 
 
 def test_self_sufficiency_is_not_bill_offset(B):
-    """The two percentages the article separates: 26% used directly, 45% offset on the bill."""
+    """The two percentages the article separates: 26% used directly, 46% offset on the bill."""
     f = B["facts"]
-    assert (f["ss_life"], f["offset_life"]) == ("26", "45")
+    assert (f["ss_life"], f["offset_life"]) == ("26", "46")
     assert int(f["ss_life"]) + int(f["credit_share"]) == int(f["offset_life"])
 
 

@@ -28,6 +28,7 @@ from .physics import effective_irradiation, load_daily, period_rollup
 KWP = SITE.kwp
 CDD_BASE = 25.0                 # degC, cooling-degree-day base on daily mean air temperature
 WHITE_GAIN = 0.12               # modelled bifacial rear gain from a white roof (datasheet-based)
+PUBLISHED_OCT_FORECAST = 388.8  # kWh, typical-October forecast published 2026-10-06, before the bill
 SURROUND_COOL = 1.3             # degC, module cooling over a cool-roof coating, measured on monofacial panels
                                 # (Mahmood et al. 2023); used only as the other bound of the white-roof heat effect
 PAINT_COST = (8000, 12000)      # INR, paint and labour
@@ -339,6 +340,8 @@ def compute() -> dict:
         "feb_heat": f"{(1 - mfeb['heat']) * 100:.1f}", "may_heat": f"{(1 - mmay['heat']) * 100:.1f}",
         "feb_tmean": f"{mfeb['tmean']:.0f}", "may_tmean": f"{mmay['tmean']:.0f}",
         "feb_vs_may": f"{(mfeb['geo'] * mfeb['heat'] / (mmay['geo'] * mmay['heat']) - 1) * 100:.0f}",
+        "pub_oct": f0(PUBLISHED_OCT_FORECAST),
+        "pub_oct_err": f"{(actual[-1] / PUBLISHED_OCT_FORECAST - 1) * 100:+.1f}".replace("-", "−"),
         "loo_feb": f"{abs(loo_sun[0]):.0f}", "loo_may": f"{abs(loo_sun[3]):.0f}",
         "sep_sigma": f"{abs(actual[-1] - sep_pred) / (sd * days[-1]):.1f}",
         "used_share": f"{self_tot / tot['gen'] * 100:.0f}", "exp_share_life": f"{tot['exp'] / tot['gen'] * 100:.0f}",

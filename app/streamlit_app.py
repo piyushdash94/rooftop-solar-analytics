@@ -63,7 +63,7 @@ with st.sidebar:
                "[Code and data](https://github.com/piyushdash94/rooftop-solar-analytics)")
 
 st.title("Reading a rooftop against the sky")
-st.write("A 3 kWp bifacial array in Satya Vihar, Bhubaneswar: eight months of bills joined to satellite weather. "
+st.write("A 3 kWp bifacial array in Satya Vihar, Bhubaneswar: nine months of bills joined to satellite weather. "
          "Use the tabs to explore; the sidebar changes the assumptions behind the what-ifs.")
 
 c = st.columns(5)
@@ -71,7 +71,7 @@ c[0].metric("Generated", f"{facts['gen_total']} kWh", help=f"{facts['n_days']} d
 c[1].metric("Explained by sunlight", f"{facts['fit_r2_pct']}%")
 c[2].metric("Typical-year forecast", f"{facts['fc_total']} kWh", help=f"range {facts['yr_min']}–{facts['yr_max']}")
 c[3].metric("Saved on bills", f"₹{facts['saved_total']}")
-c[4].metric("September forecast miss", f"{facts['sep_err']}%")
+c[4].metric("October forecast miss", f"{facts['pub_oct_err']}%", help="Published typical-October forecast vs meter")
 
 tabs = st.tabs(["Weather and output", "Choosing the model", "Panel health", "Forecast",
                 "Household and money", "What if", "The long record", "Data"])
@@ -89,8 +89,8 @@ with tabs[0]:
 
 # ------------------------------------------------------------------ choosing the model
 with tabs[1]:
-    st.write("Each model is fitted on seven months and asked to predict the eighth, for every month in turn. "
-             "Lower is better. With eight points, extra variables mostly add ways to fit noise.")
+    st.write("Each model is fitted on all months but one and asked to predict the one left out, for every month in turn. "
+             "Lower is better. With nine points, extra variables mostly add ways to fit noise.")
     show(F.fig_models(B), "models")
     st.dataframe(pd.DataFrame(B["models"])[["name", "form", "params", "mae", "worst"]].rename(columns={
         "name": "Model", "form": "Form", "params": "Fitted parameters", "mae": "Mean miss, %",
@@ -101,7 +101,7 @@ with tabs[1]:
 # ------------------------------------------------------------------ panel health
 with tabs[2]:
     st.write("Expected energy = sunlight on the panels × heat derate × 3 kWp × η. "
-             f"η = {facts['eta']} is the median across the eight months, so this compares months with each other.")
+             f"η = {facts['eta']} is the median across the nine months, so this compares months with each other.")
     show(F.fig_resid(B), "resid")
     show(F.fig_normal(B), "normal")
 

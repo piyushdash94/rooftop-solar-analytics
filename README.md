@@ -14,7 +14,7 @@ next year?
 **[Read the article](https://piyushdash94.github.io/rooftop-solar-analytics/)** (interactive charts) ·
 [PDF](article/rooftop-solar-article.pdf) · [Blog version](article/blog.md) · `streamlit run app/streamlit_app.py`
 
-Data: eight TPCODL bills, 8 February to 1 October 2026 (236 days, through the September bill).
+Data: nine TPCODL bills, 8 February to 1 November 2026 (267 days, through the October bill).
 
 ---
 
@@ -23,12 +23,12 @@ Data: eight TPCODL bills, 8 February to 1 October 2026 (236 days, through the Se
 | Question | Answer |
 |---|---|
 | What drives output? | **Sunlight explains 91%** of month-to-month generation. Adding temperature or rain made held-out predictions worse, so the model stayed simple. |
-| Can it forecast? | Fitted on February to August, it predicted **327 kWh for September against 316 metered (−3.4%)**. Across all months, holding each out in turn, the typical miss is 5%. |
-| Is the system healthy? | Yes. Against a physics model, only **March (−8%) and May (−9%)** fall short. March was mostly weather. May is heat or dust; monthly bills cannot separate the two. |
+| Can it forecast? | The forecast published before October's bill said **389 kWh; the meter read 384 (−1.1%)**. Across all months, holding each out in turn, the typical miss is about 5%. |
+| Is the system healthy? | Yes. Against a physics model, only **March (−7%) and May (−8%)** fall short. March was mostly weather. May is heat or dust; monthly bills cannot separate the two. |
 | Why did bills rise? | **Demand rose 75% per day** from February to June (20 → 35 kWh/day) as cooling load grew. Generation did not fall. |
-| What will a year bring? | About **4,580 kWh** in a typical year, and 4,300–4,700 across the last ten years of weather. 2026 is a poor guide: July and August were 23–28% darker than normal. |
-| What has it saved? | **₹17,487** so far. Generation equals 45% of household demand on the bill; 26% of demand was met directly by the panels at the moment they produced. |
-| Would a white roof help? | About **+513 kWh a year** (+11%), payback 2.5–3.7 years, modelled. It adds light, not cooling: the panels end up about 1.3–2.6 °C warmer, which costs 16–37 kWh of the gain. |
+| What will a year bring? | About **4,520 kWh** in a typical year, and 4,250–4,650 across the last ten years of weather. 2026 is a poor guide: July and August were 20–22% darker than normal, the darkest in ten years. |
+| What has it saved? | **₹19,926** so far. Generation equals 46% of household demand on the bill; 26% of demand was met directly by the panels at the moment they produced. |
+| Would a white roof help? | About **+506 kWh a year** (+11%), payback 2.5–3.7 years, modelled. It adds light, not cooling: the panels end up about 1.3–2.6 °C warmer, which costs 16–36 kWh of the gain. |
 | Is the sky changing? | Since 1984, sunlight at this location has fallen 0.15 kWh/m² per day per decade. At this grid cell the decline is in the clear-sky component, consistent with aerosols. |
 
 ![Generation per day against sunlight per day, one point per billing month](article/figures/scatter.png)
@@ -51,18 +51,22 @@ NASA POWER weather (cached CSV) ┘   sunlight on     every       every       HT
    [NASA POWER](https://power.larc.nasa.gov/): free, no key, cached in `data/raw/` so every
    result reproduces offline.
 3. **Model generation two ways.**
-   - *Sunlight line:* generation per day = 2.04 × sunlight + 2.56 (R² 0.91). Simple, and the
-     best forecaster on months it has not seen.
+   - *Sunlight line:* generation per day = 2.18 × sunlight + 1.82 (R² 0.91). One input, two
+     fitted numbers.
    - *Physics model:* sunlight on the 12° panel plane × heat loss × 3 kWp × one fitted
-     efficiency. Less accurate as a forecaster (6.7% miss against 5.1%), but it explains *why*
-     a month over- or under-delivered. It is also the model run over ten years of historical
+     efficiency. Its held-out miss is 4.7% against the line's 5.2%, too close to rank with nine
+     months, but it also explains *why* a month over- or under-delivered. It is also the model run over ten years of historical
      weather for the typical-year forecast.
-4. **Choose features by test, not by hunch.** Each candidate model is fitted on seven months and
-   asked to predict the eighth, for every month in turn (leave-one-out). Only what improved
+4. **Choose features by test, not by hunch.** Each candidate model is fitted on all months but
+   one and asked to predict the one left out, for every month in turn (leave-one-out). Only what improved
    those held-out predictions stayed.
 5. **Write once, render everywhere.** `story.compute()` produces every number and
    `figures.py` every chart. The prose in `article/article.md` uses placeholders like
    `[[fc_total]]`, so the text and the charts cannot disagree.
+
+**Data gets revised.** NASA revised July 2026 sunlight up ~5% and August ~9% after first
+release. That erased what had looked like monsoon over-delivery, so the latest months are
+always re-downloaded before a new bill is analysed.
 
 **Measured vs modelled.** Generation, import and export are metered. Weather is satellite
 estimates. The white-roof gain and its heat effect are modelled from the module datasheet and

@@ -1,12 +1,12 @@
 # Reading a rooftop against the sky
 
-*Eight months of electricity bills, ten years of satellite weather, and what they say about one bifacial solar array in Bhubaneswar.*
+*Nine months of electricity bills, ten years of satellite weather, and what they say about one bifacial solar array in Bhubaneswar.*
 
 By Piyush Dash · October 2026
 
 In February 2026 a 3 kWp array of bifacial panels went up on the roof of our family home in Satya Vihar, Bhubaneswar. Eight months later we had a folder of bills and a few questions that sounded simple. Is the system working as it should? Why did the bills go up when the panels were new? What will it make next year?
 
-**The data.** Eight monthly TPCODL bills, [[first]] to [[last]], each listing cumulative readings from the solar generation meter and the import–export net meter; a month's units are the difference between two consecutive readings.
+**The data.** Nine monthly TPCODL bills, [[first]] to [[last]], each listing cumulative readings from the solar generation meter and the import–export net meter; a month's units are the difference between two consecutive readings.
 
 We had no inverter app logging output minute by minute, only those monthly numbers. This piece is about how far they can go once you join them to the weather, and about the hunches we had to test, drop or keep along the way.
 
@@ -14,7 +14,7 @@ We had no inverter app logging output minute by minute, only those monthly numbe
 
 - **[[gen_total]] kWh** generated over [[n_days]] days, [[first]] to [[last]].
 - **[[fit_r2_pct]]%** of the month-to-month variation is explained by sunlight alone.
-- **[[sep_err]]%** miss on a month the model had never seen. Its typical miss across all months is about [[loo_mae]]%.
+- **[[pub_oct_err]]%** miss against the October forecast we published before the bill arrived. Its typical miss across all months is about [[loo_mae]]%.
 - **[[fc_total]] kWh** expected in a typical weather year. The last ten years of weather range from [[yr_min]] to [[yr_max]].
 - **₹[[saved_total]]** saved on bills so far.
 - **+[[paint_kwh]] kWh** a year, modelled, if the roof under the panels is painted white.
@@ -44,15 +44,15 @@ Sunlight accounts for [[fit_r2_pct]]% of the variation between months (R² = [[f
 
 ## Choosing what to leave out
 
-A line through eight points is easy to draw and easy to fool yourself with. With so few months, every extra variable is another way to fit noise. So instead of asking which features sounded reasonable, we asked which ones helped predict a month the model had not seen.
+A line through nine points is easy to draw and easy to fool yourself with. With so few months, every extra variable is another way to fit noise. So instead of asking which features sounded reasonable, we asked which ones helped predict a month the model had not seen.
 
-The test is called leave-one-out. Fit the model on seven months, predict the eighth, and repeat for every month. The average miss is the number to beat.
+The test is called leave-one-out. Fit the model on all months but one, predict the one left out, and repeat for every month. The average miss is the number to beat.
 
 {{fig:models}}
 
 Sunlight alone missed by [[mae_sun]]% on average. Adding temperature made it worse, at [[mae_sun_t]]%, and so did adding rain, at [[mae_sun_rain]]%. Rain on its own ([[mae_rain]]%) and temperature on its own ([[mae_temp]]%) were far worse. Rain matters, but its effect is already inside the sunlight number, because rainy days are dull days. Adding it a second time only gives the fit another way to chase noise.
 
-We kept two models. The simple sunlight line is the better forecaster at this resolution. The physics model described below misses by [[mae_phys]]% on average, so we do not keep it for its forecasting record. We keep it because it can do two things the line cannot: judge the panels' health month by month, and forecast winter months the line has never seen.
+We kept two models. The simple sunlight line is the quick one: one input, two fitted numbers. The physics model described below misses by [[mae_phys]]% on average, slightly better than the line. When we first ran this comparison the order was reversed, until NASA revised its July and August data (see below). With nine points, a gap that small is not a ranking. We keep the physics model for two things the line cannot do: judge the panels' health month by month, and forecast winter months the line has never seen.
 
 Every analysis is a list of decisions about what to ignore. Here is ours.
 
@@ -73,7 +73,7 @@ Every analysis is a list of decisions about what to ignore. Here is ours.
 
 ## Did the line see the future?
 
-The cleanest test of a model is a month that did not exist when it was built. We fitted the line on February to August and waited for September's bill. Given September's measured sunlight, it predicted [[sep_pred]] kWh. The meter recorded [[sep_act]], a miss of [[sep_err]]%, well inside the line's usual scatter of about ±[[sep_band]] kWh for a month that long.
+The cleanest test of a model is a month that did not exist when it was built. We published a forecast before October's bill arrived: [[pub_oct]] kWh for a typical October. The meter recorded [[sep_act]], a miss of [[pub_oct_err]]%. The sunlight line, fitted on February to September and given October's measured sunlight, predicted [[sep_pred]] kWh, a miss of [[sep_err]]%, well inside its usual scatter of about ±[[sep_band]] kWh for a month that long. September, tested the same way a month earlier, missed by under 4%.
 
 {{fig:loo}}
 
@@ -93,7 +93,7 @@ To judge the panels themselves we needed an estimate of what the weather allowed
 
 **Step 2: heat.** These modules lose 0.30% of their output for every degree their cells run above 25 °C {{ref:waaree}}. Cell temperature is estimated with the datasheet's nominal operating cell temperature (NOCT) of [[noct]] °C, the temperature the cells reach under 800 W/m² of sunlight with the air at 20 °C {{ref:waaree,duffie}}. Cells warm above the air in proportion to the sunlight on them, so the panels run hot in clear spring weather and stay near air temperature under monsoon cloud.
 
-**Step 3: one fitted number.** One kilowatt-hour of sunlight per square metre on the panels would give about one kilowatt-hour per kilowatt-peak at test conditions. Real systems lose some of that in the inverter, the wiring, light reflected off the glass, and dust. We let the data set that single factor, η, as the median of the eight months' metered generation divided by the energy the first two steps predicted. It comes out at [[eta]].
+**Step 3: one fitted number.** One kilowatt-hour of sunlight per square metre on the panels would give about one kilowatt-hour per kilowatt-peak at test conditions. Real systems lose some of that in the inverter, the wiring, light reflected off the glass, and dust. We let the data set that single factor, η, as the median of the nine months' metered generation divided by the energy the first two steps predicted. It comes out at [[eta]].
 
 | Input | Value | Where it comes from |
 |---|---|---|
@@ -105,7 +105,7 @@ To judge the panels themselves we needed an estimate of what the weather allowed
 | Power loss with temperature | [[gamma]]% per °C | Module datasheet {{ref:waaree}} |
 | NOCT | [[noct]] °C | Module datasheet {{ref:waaree}} |
 | Array rating | 3 kWp | The installation |
-| System efficiency, η | [[eta]] | Fitted: median of metered ÷ predicted over the eight months |
+| System efficiency, η | [[eta]] | Fitted: median of metered ÷ predicted over the nine months |
 
 Because η is fitted on the same months the model judges, the model can only compare months with one another. It cannot say how good the system is in absolute terms.
 
@@ -117,9 +117,9 @@ March ([[r_mar]]%) and May ([[r_may]]%) are the only real shortfalls.
 
 March is the story of a hunch that was wrong. Early on we flagged it as suspicious, reasoning that March in Odisha is usually drier and sunnier than April. The satellite record said otherwise: March 2026 received less sun than April. Most of March's low output was weather, and only the residual in the chart survived once the weather was accounted for.
 
-May had the most sun of any month, the highest mean air temperature and the worst conversion, even after the model's heat correction. Heat beyond what the model captures, and pre-monsoon dust, are the candidates. April and June, which followed 75 and 162 mm of rain, both recovered to between +1% and +2%, which fits dust being washed off. But May itself had 59 mm of rain and still fell short, so monthly bills cannot separate the two.
+May had the most sun of any month, the highest mean air temperature and the worst conversion, even after the model's heat correction. Heat beyond what the model captures, and pre-monsoon dust, are the candidates. April and June, which followed 75 and 162 mm of rain, both came in above expectation ([[r_apr]]% and [[r_jun]]%), which fits dust being washed off. But May itself had 59 mm of rain and still fell short, so monthly bills cannot separate the two.
 
-July and August came in [[r_jul]]% and [[r_aug]]% above expectation. Under heavy overcast most light is diffuse, and a daily formula for splitting direct from diffuse light is least reliable there. We treat that as a limit of the method rather than a property of the panels.
+July and August came in [[r_jul]]% and [[r_aug]]% above expectation, within the model's usual scatter. Our first version showed them 7 to 10% high, and we blamed the daily formula that splits direct from diffuse light under heavy cloud. That explanation was wrong. NASA later revised its July sunlight up by about 5% and August by about 9%, and the excess disappeared. The early satellite estimates had under-read the monsoon.
 
 ## 2026 was not a normal year
 
@@ -127,9 +127,9 @@ Our first projection for the next twelve months simply reused 2026's weather. Th
 
 {{fig:normal}}
 
-Comparing each billing month with the same calendar dates over the previous ten years shows how unusual 2026 was. July and August received [[jul_pct]]% and [[aug_pct]]% less sunlight than normal, darker than any of the previous ten years. July's rainfall was [[jul_rain]] mm against a ten-year average of [[jul_rain_norm]] mm. Across the eight billed months, sunlight ran [[y26_pct]]% below normal.
+Comparing each billing month with the same calendar dates over the previous ten years shows how unusual 2026 was. July and August received [[jul_pct]]% and [[aug_pct]]% less sunlight than normal, darker than any of the previous ten years. July's rainfall was [[jul_rain]] mm against a ten-year average of [[jul_rain_norm]] mm. Across the nine billed months, sunlight ran [[y26_pct]]% below normal.
 
-NASA revises its most recent months as processing completes. Between our first and second download, June's values changed, so July to September may still shift slightly. The rainfall, which comes from a separate dataset, tells the same story.
+NASA revises its most recent months as processing completes. June changed by about 2% between downloads, and July and August by 5 to 9%, so October may still shift. The rainfall, which comes from a separate dataset, tells the same story.
 
 ## What a normal year should look like
 
@@ -137,7 +137,7 @@ So instead of projecting from one unusual year, we ran the physics model over ev
 
 {{fig:forecast}}
 
-A typical year comes to about [[fc_total]] kWh for [[fc_start]] to [[fc_end]]. The simple sunlight line gives [[reg_total]] kWh for the same months, about [[phys_minus_reg]]% lower, and most of the gap falls in the low-sun months from October to March. That is the February effect again. In winter the sun is low, and panels tilted towards it collect more than flat-ground sunlight suggests. The line was fitted on February to September and has never seen a winter sun. The physics model knows the geometry.
+A typical year comes to about [[fc_total]] kWh for [[fc_start]] to [[fc_end]]. The simple sunlight line gives [[reg_total]] kWh for the same months, about [[phys_minus_reg]]% lower, and most of the gap falls in the low-sun months from October to March. That is the February effect again. In winter the sun is low, and panels tilted towards it collect more than flat-ground sunlight suggests. The line has only seen February to October and has never seen a deep-winter sun. The physics model knows the geometry.
 
 {{fig:backtest}}
 
@@ -204,11 +204,11 @@ Two slow losses compound. The panels age: the datasheet warrants at least 99% of
 
 ## How we worked
 
-- **Data.** Eight TPCODL bills, [[first]] to [[last]], reconciled against cumulative meter readings. NASA POWER daily weather for the billed days, ten years of daily history (2016 to 2025), and the monthly and annual record back to 1984 {{ref:nasa_power}}.
-- **Model one, for forecasting.** Generation per day = a × sunlight + b, fitted by least squares on the eight months.
+- **Data.** Nine TPCODL bills, [[first]] to [[last]], reconciled against cumulative meter readings. NASA POWER daily weather for the billed days, ten years of daily history (2016 to 2025), and the monthly and annual record back to 1984 {{ref:nasa_power}}.
+- **Model one, for forecasting.** Generation per day = a × sunlight + b, fitted by least squares on the nine months.
 - **Model two, for diagnosis and the typical-year forecast.** Sunlight on the panels × heat derate × kWp × η, with η the only fitted number.
-- **Validation.** One genuine out-of-sample month (September) and leave-one-out across all eight.
+- **Validation.** Two genuine out-of-sample months (September, then October against a published forecast) and leave-one-out across all nine.
 - **Assumptions.** Panels fixed at [[tilt]]° facing south. Ground reflectivity [[albedo]]. Cell temperature from a NOCT of [[noct]] °C. Tariff slabs of ₹2.90, 4.70, 5.70 and 6.10 per unit plus 4% duty. The house empty for [[absent]] days in May (demand only). White-surface gain of [[white_light_pct]]% from the datasheet's rear-gain table.
-- **Limits.** Eight monthly points. An efficiency fitted on the same months it judges. Satellite estimates for a grid cell rather than a sensor on the roof. No inverter-level data.
+- **Limits.** Nine monthly points. An efficiency fitted on the same months it judges. Satellite estimates for a grid cell rather than a sensor on the roof. No inverter-level data.
 
 Every number and chart in this piece is regenerated from the project's data with a single command.

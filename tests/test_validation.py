@@ -21,9 +21,9 @@ from solar_analytics.loaders import (
 
 # Final cumulative meter readings at 2026-10-01. Independent ground truth.
 EXPECTED_CUMULATIVE = {
-    "generation_kwh": 2797.03,
-    "import_kwh": 4559.42,
-    "export_kwh": 1187.12,
+    "generation_kwh": 3181.41,
+    "import_kwh": 5163.79,
+    "export_kwh": 1362.35,
 }
 
 
@@ -37,9 +37,9 @@ def readings() -> pd.DataFrame:
     return load_meter_readings()
 
 
-def test_bills_load_eight_periods(bills):
-    assert len(bills) == 8
-    assert bills["days"].sum() == 236
+def test_bills_load_nine_periods(bills):
+    assert len(bills) == 9
+    assert bills["days"].sum() == 267
 
 
 def test_cumulative_totals_match_meters(bills):
