@@ -122,7 +122,8 @@ def write_pngs(figs) -> None:
     for fid, fig in figs.items():
         f = fig.full_figure_for_development(warn=False) if False else fig
         g = type(f)(f)
-        g.update_layout(paper_bgcolor="#FFFFFF", margin=dict(l=12, r=12, t=12, b=12))
+        top = max(12, (fig.layout.margin.t or 0) + 4)        # keep room for subplot titles
+        g.update_layout(paper_bgcolor="#FFFFFF", margin=dict(l=12, r=12, t=top, b=12))
         g.write_image(FIG_DIR / f"{fid}.png", width=960, height=int(fig.layout.height or 320), scale=2)
 
 

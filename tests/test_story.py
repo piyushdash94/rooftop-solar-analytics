@@ -124,3 +124,20 @@ def test_white_roof_heat_bounds(B):
     base = sum(f["mean"] for f in B["forecast"])
     net = sum(p["white"] for p in B["paint"]) - base
     assert 0 < net < base * 0.12
+
+
+def test_preregistered_winter_test_is_frozen(B):
+    """Written down on 2026-11-08. The rule must not drift as winter bills arrive."""
+    from solar_analytics import story
+    frozen = (story.ETA_FROZEN, story.EXP_N, story.DUST_RAIN_MM, story.WINTER)
+    assert frozen == (0.9132, 9, 5.0, [11, 12, 1, 2])
+    f = B["facts"]
+    assert (f["pdj_dust"], f["pdj_kt"], f["pdj_tcell"]) == ("−7.2", "−2.2", "+5.0")
+    assert (f["b_sd"], f["b_sh"]) == ("−4.7", "+1.4")
+
+
+def test_dust_is_weakest_once_sky_is_held_fixed(B):
+    """Discovery-set result: the three proxies are collinear, and dust fades first."""
+    p = B["experiment"]["partial"]
+    assert abs(p["dust_given_sky"]) < abs(p["sky_given_dust"])
+    assert all(t["rho"] < 0 for t in B["experiment"]["tests"].values())

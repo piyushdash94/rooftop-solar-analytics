@@ -28,6 +28,12 @@ from .physics import effective_irradiation, load_daily, period_rollup
 KWP = SITE.kwp
 CDD_BASE = 25.0                 # degC, cooling-degree-day base on daily mean air temperature
 WHITE_GAIN = 0.12               # modelled bifacial rear gain from a white roof (datasheet-based)
+# Pre-registered experiment (published 2026-11-08, before the winter bills): dust, heat or sky?
+PREREG_DATE = "2026-11-08"
+ETA_FROZEN = 0.9132              # η at registration; winter residuals are scored against this, not a refit
+EXP_N = 9                        # the discovery set: Feb-Oct 2026. Hypothesis tests never use later months.
+DUST_RAIN_MM = 5.0               # a day with this much rain resets the dust clock (primary choice)
+WINTER = [11, 12, 1, 2]          # the test season
 GUEST_MONTH = "Oct"             # owner: guests stayed about a week in October (demand only)
 PUBLISHED_OCT_FORECAST = 388.8  # kWh, typical-October forecast published 2026-10-06, before the bill
 SURROUND_COOL = 1.3             # degC, module cooling over a cool-roof coating, measured on monofacial panels
@@ -65,6 +71,97 @@ def _trend(x, y):
     r = stats.linregress(x, y)
     return {"slope_decade": r.slope * 10, "p": r.pvalue, "r2": r.rvalue ** 2,
             "fit": (r.intercept + r.slope * np.asarray(x)).tolist()}
+
+
+def _perm_spearman(x: np.ndarray, y: np.ndarray) -> tuple[float, float]:
+    """Spearman rho and exact one-sided permutation p (H1: rho < 0)."""
+    from itertools import permutations
+    rx = pd.Series(x).rank().to_numpy() - (len(x) + 1) / 2
+    ry = pd.Series(y).rank().to_numpy() - (len(y) + 1) / 2
+    den = np.sqrt((rx ** 2).sum() * (ry ** 2).sum())
+    obs = float((rx * ry).sum() / den)
+    perms = np.array(list(permutations(range(len(y)))))
+    null = (rx[None, :] * ry[perms]).sum(1) / den
+    return obs, float((null <= obs + 1e-12).mean())
+
+
+def _partial_rank(x, y, z) -> float:
+    """Rank correlation of x and y after removing a linear effect of z from both."""
+    rx, ry, rz = (pd.Series(v).rank().to_numpy() for v in (x, y, z))
+    ex = rx - np.polyval(np.polyfit(rz, rx, 1), rz)
+    ey = ry - np.polyval(np.polyfit(rz, ry, 1), rz)
+    return float(np.corrcoef(ex, ey)[0, 1])
+
+
+def _dust_clock(rain: pd.Series, start_clean: bool) -> pd.Series:
+    """Days since the last day with >= DUST_RAIN_MM of rain (0 on the first day if the panels start clean)."""
+    out, c = [], 0
+    for i, v in enumerate(rain.fillna(0).to_numpy()):
+        c = 0 if v >= DUST_RAIN_MM or (start_clean and i == 0) else c + 1
+        out.append(c)
+    return pd.Series(out, rain.index)
+
+
+def _experiment(w26: pd.DataFrame, hist: pd.DataFrame, monthly: list[dict], roll: pd.DataFrame) -> dict:
+    """Dust, heat or sky: three explanations for the residual pattern, tested on the nine discovery
+    months and turned into a written-down forecast for the winter bills."""
+    w = w26.copy()
+    w["dust"] = _dust_clock(w["PRECTOTCORR"], start_clean=True)       # new panels on 8 February
+    h = hist.copy()
+    h["dust"] = _dust_clock(h["PRECTOTCORR"], start_clean=False)
+
+    def wmean(df, col):      # sunlight-weighted: a dusty or hot day matters more when it is bright
+        d = df.dropna(subset=["poa"])
+        return float((d[col] * d.poa).sum() / d.poa.sum())
+
+    rows = []
+    for i, m in enumerate(monthly):
+        d = w.loc[m["start"]:m["end"]]
+        r = roll.iloc[i]
+        frozen = r.actual_kwh / (r.e_eff_total * KWP * ETA_FROZEN) - 1
+        rows.append({"month": m["month"], "start": m["start"], "resid": m["resid"],
+                     "frozen": _r(frozen * 100, 1),
+                     "dust": _r(wmean(d, "dust"), 1), "tcell": _r(wmean(d, "t_cell"), 1),
+                     "kt": _r(wmean(d, "kt"), 3)})
+    disc = pd.DataFrame(rows[:EXP_N])
+    y = disc.resid.to_numpy(float)
+    names = {"dust": "Dust", "tcell": "Heat", "kt": "Sky"}
+    tests = {}
+    for k in names:
+        x = disc[k].to_numpy(float)
+        rho, p = _perm_spearman(x, y)
+        slope, icpt = np.polyfit(x, y, 1)
+        tests[k] = {"rho": rho, "p": p, "slope": float(slope), "icpt": float(icpt),
+                    "lo": float(x.min()), "hi": float(x.max())}
+    order = sorted(tests, key=lambda k: tests[k]["p"])          # Holm, three one-sided tests
+    adj, run = {}, 0.0
+    for i, k in enumerate(order):
+        run = max(run, min(1.0, tests[k]["p"] * (len(order) - i)))
+        adj[k] = run
+    for k in tests:
+        tests[k]["p_holm"] = adj[k]
+    part = {"dust_given_sky": _partial_rank(disc.dust, y, disc.kt),
+            "sky_given_dust": _partial_rank(disc.kt, y, disc.dust),
+            "heat_given_sky": _partial_rank(disc.tcell, y, disc.kt)}
+    collin = disc[["dust", "tcell", "kt"]].corr(method="spearman")
+
+    g = h.groupby(h.index.month)
+    typ = {mo: {k: wmean(g.get_group(mo), k) for k in ("dust", "t_cell", "kt")} for mo in WINTER}
+    pred = []
+    for mo in WINTER:
+        t = typ[mo]
+        row = {"label": calendar.month_abbr[mo]}
+        for k, v in (("dust", t["dust"]), ("tcell", t["t_cell"]), ("kt", t["kt"])):
+            row[k] = _r(tests[k]["icpt"] + tests[k]["slope"] * v, 1)
+            row[k + "_x"] = _r(v, 2)
+            row[k + "_extrap"] = bool(v > tests[k]["hi"] * 1.05 or v < tests[k]["lo"] * 0.95)
+        pred.append(row)
+    outcome = [r for r in rows[EXP_N:] if pd.Timestamp(r["start"]).month in WINTER]
+    return {"rows": rows, "tests": tests, "partial": part,
+            "collin": {"dust_kt": float(collin.loc["dust", "kt"]),
+                       "dust_tcell": float(collin.loc["dust", "tcell"]),
+                       "tcell_kt": float(collin.loc["tcell", "kt"])},
+            "pred": pred, "outcome": outcome, "sd": float(np.std(y, ddof=1))}
 
 
 @lru_cache(maxsize=1)
@@ -393,7 +490,43 @@ def compute() -> dict:
             "may_charge": f0(may.charge), "may_cf_charge_t": f0(may.charge + may.cf_charge),
         })
 
+    # ---------------------------------------------------------------- the dust / heat / sky experiment
+    X = _experiment(w26, hist, monthly, roll)
+    T, P = X["tests"], X["pred"]
+
+    def sg(v, n=2):
+        return f"{v:+.{n}f}".replace("-", "−")
+
+    def pdj(k):
+        return float(np.mean([p[k] for p in P if p["label"] in ("Dec", "Jan")]))
+    from scipy.stats import norm
+    b_sd = (pdj("dust") + pdj("kt")) / 2          # verdict boundaries on the Dec-Jan mean residual
+    b_sh = (pdj("kt") + pdj("tcell")) / 2
+    se2 = X["sd"] / np.sqrt(2)                     # rough noise on a two-month mean
+    X["rule"] = {"dust_below": b_sd, "heat_above": b_sh, "se": se2,
+                 "miss_sky_dust": float(norm.cdf((b_sd - pdj("kt")) / se2)),
+                 "miss_sky_heat": float(norm.sf((b_sh - pdj("kt")) / se2))}
+    facts.update({
+        "b_sd": sg(b_sd, 1), "b_sh": sg(b_sh, 1), "rule_se": f"{se2:.1f}",
+        "miss_sd": f"{X['rule']['miss_sky_dust'] * 100:.0f}", "miss_sh": f"{X['rule']['miss_sky_heat'] * 100:.0f}",
+        "prereg_date": "8 November 2026", "eta_frozen": f"{ETA_FROZEN:.3f}", "exp_n": str(EXP_N),
+        "dust_mm": f"{DUST_RAIN_MM:.0f}", "exp_sd": f"{X['sd']:.1f}",
+        **{f"rho_{k}": sg(T[k]["rho"]) for k in T},
+        **{f"p_{k}": f"{T[k]['p']:.3f}" for k in T},
+        **{f"ph_{k}": f"{T[k]['p_holm']:.3f}" for k in T},
+        "part_dust_sky": sg(X["partial"]["dust_given_sky"]), "part_sky_dust": sg(X["partial"]["sky_given_dust"]),
+        "part_heat_sky": sg(X["partial"]["heat_given_sky"]),
+        "col_dust_kt": sg(X["collin"]["dust_kt"]), "col_dust_tcell": sg(X["collin"]["dust_tcell"]),
+        **{f"pdj_{k}": sg(pdj(k), 1) for k in ("dust", "tcell", "kt")},
+        "pnov_dust": sg(P[0]["dust"], 1), "pfeb_dust": sg(P[-1]["dust"], 1),
+        "dust_nov_days": f"{P[0]['dust_x']:.0f}", "dust_feb_days": f"{P[-1]['dust_x']:.0f}",
+        "dust_obs_max": f"{T['dust']['hi']:.0f}",
+        "kt_winter_lo": f"{min(p['kt_x'] for p in P):.2f}", "kt_winter_hi": f"{max(p['kt_x'] for p in P):.2f}",
+        "tc_winter_lo": f"{min(p['tcell_x'] for p in P):.0f}", "tc_winter_hi": f"{max(p['tcell_x'] for p in P):.0f}",
+    })
+
     return {
+        "experiment": X,
         "monthly": monthly, "daily": daily, "models": models,
         "fit": {"a": a, "c": c, "r2": r2, "sd": sd, "a7": a7, "c7": c7, "sep_pred": sep_pred,
                 "loo": [_r(v, 1) for v in loo_sun]},

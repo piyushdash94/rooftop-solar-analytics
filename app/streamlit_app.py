@@ -103,6 +103,12 @@ with tabs[2]:
     st.write("Expected energy = sunlight on the panels × heat derate × 3 kWp × η. "
              f"η = {facts['eta']} is the median across the nine months, so this compares months with each other.")
     show(F.fig_resid(B), "resid")
+    st.subheader("Experiment: dust, heat or sky?")
+    st.write("Three explanations for the residuals, tested on the nine discovery months, then turned into a "
+             f"forecast for the winter bills, written down on {facts['prereg_date']} against a frozen η of "
+             f"{facts['eta_frozen']}.")
+    show(F.fig_experiment(B), "experiment")
+    show(F.fig_prereg(B), "prereg")
     show(F.fig_normal(B), "normal")
 
 # ------------------------------------------------------------------ forecast

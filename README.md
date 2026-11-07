@@ -25,6 +25,7 @@ Data: nine TPCODL bills, 8 February to 1 November 2026 (267 days, through the Oc
 | What drives output? | **Sunlight explains 91%** of month-to-month generation. Adding temperature or rain made held-out predictions worse, so the model stayed simple. |
 | Can it forecast? | The forecast published before October's bill said **389 kWh; the meter read 384 (−1.1%)**. Across all months, holding each out in turn, the typical miss is about 5%. |
 | Is the system healthy? | Yes. Against a physics model, only **March (−7%) and May (−8%)** fall short. March was mostly weather. May is heat or dust; monthly bills cannot separate the two. |
+| Dust, heat or sky? | An open experiment. Across nine months, shortfalls track dust, heat and clear skies alike, because dry months are also hot and clear. Dust fades first when sky clearness is held fixed. Each explanation predicts something different for winter (dust: residuals sink to about −7%; heat: rise to +5%; sky: stay near −2%), and those forecasts were **written down on 8 November 2026**, before the winter bills. |
 | Why did bills rise? | **Demand rose 75% per day** from February to June (20 → 35 kWh/day) as cooling load grew. Generation did not fall. |
 | What will a year bring? | About **4,520 kWh** in a typical year, and 4,250–4,650 across the last ten years of weather. 2026 is a poor guide: July and August were 20–22% darker than normal, the darkest in ten years. |
 | What has it saved? | **₹19,926** so far. Generation equals 46% of household demand on the bill; 26% of demand was met directly by the panels at the moment they produced. |
@@ -80,7 +81,7 @@ published field tests, not measured on this roof. The article labels each.
 pip install -e ".[dev,app,article]"
 python scripts/build_article.py      # site/index.html, article/blog.md, PDF, figures, FINDINGS.md
 streamlit run app/streamlit_app.py   # interactive version with adjustable assumptions
-pytest                               # 31 tests, offline
+pytest                               # 33 tests, offline
 ```
 
 The PDF and PNG charts need a Chromium browser (`playwright install chromium`).

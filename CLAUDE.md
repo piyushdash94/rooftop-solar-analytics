@@ -27,7 +27,7 @@ article/article.md             the prose. [[fact]] placeholders, {{fig:id}} / {{
 scripts/build_article.py       renders site/index.html, article/blog.md, article/figures/*.png,
                                article/rooftop-solar-article.pdf and FINDINGS.md
 app/streamlit_app.py           interactive companion; same story + figures, plus what-if sliders
-tests/                         31 tests; test_story.py pins the article's conclusions
+tests/                         33 tests; test_story.py pins the article's conclusions
 ```
 
 Never hand-edit `site/index.html`, `article/blog.md`, `FINDINGS.md` or the PNGs/PDF. Edit
@@ -103,6 +103,19 @@ comparison (`story.compute()["models"]`).
   Do not write "aerosols, not clouds" without that scope. The record's falling Tmax
   contradicts IMD station data (Kumar 2023); flagged, never used.
 - Lifetime: datasheet warranty 99% after year 1, 87.4% after year 30 (~0.4%/yr), over 30 years.
+
+## Pre-registered experiment (registered 2026-11-08) — do not edit the rule
+
+Dust vs heat vs sky as the driver of residuals. Discovery set = first nine months (EXP_N), frozen.
+Proxies are sunlight-weighted per period: dust = days since rain ≥ 5 mm (clock 0 at commissioning),
+cell temperature, clearness index. Exact one-sided permutation Spearman: dust −0.63 (p .039), heat
+−0.66 (.029), sky −0.73 (.016); Holm .059/.059/.047. Partial: dust|sky −0.22, sky|dust −0.52,
+heat|sky −0.52. Collinear (dust~kt +0.71, dust~tcell +0.75).
+Winter forecasts (Dec–Jan mean residual vs ETA_FROZEN 0.9132): dust −7.2, sky −2.2, heat +5.0.
+Verdict: < −4.7 dust, > +1.4 heat, else sky; Nov→Feb fall ≥ 5 points also counts for dust.
+Misclassification ~21% (sky→dust), ~13% (sky→heat). Score new winter bills with
+`experiment["outcome"]` (frozen residuals), never by refitting. `test_preregistered_winter_test_is_frozen`
+guards the constants. When Dec and Jan bills are in, report the verdict whichever way it falls.
 
 ## Metric definitions — do not drift
 

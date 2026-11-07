@@ -470,6 +470,61 @@ def fig_life(B):
     return fig
 
 
+def fig_experiment(B):
+    X = B["experiment"]
+    rows = X["rows"][:9]
+    spec = [("dust", "dry spell, sunlight-weighted days", "Dust", col("dim")),
+            ("tcell", "cell temperature, °C", "Heat", col("sun")),
+            ("kt", "clearness index (sky)", "Sky", col("rain"))]
+    fig = make_subplots(rows=1, cols=3, shared_yaxes=True, horizontal_spacing=0.05,
+                        subplot_titles=[f"{t}: ρ = {X['tests'][k]['rho']:+.2f}, p = {X['tests'][k]['p']:.3f}".replace("-", "−")
+                                        for k, _, t, _ in spec])
+    y = [r["resid"] for r in rows]
+    for i, (k, xt, _t, c) in enumerate(spec, start=1):
+        x = [r[k] for r in rows]
+        tt = X["tests"][k]
+        lo, hi = min(x), max(x)
+        fig.add_trace(go.Scatter(x=[lo, hi], y=[tt["icpt"] + tt["slope"] * lo, tt["icpt"] + tt["slope"] * hi],
+                                 mode="lines", line=dict(color=c, width=1.6, dash="dash"), hoverinfo="skip",
+                                 showlegend=False), row=1, col=i)
+        fig.add_trace(go.Scatter(x=x, y=y, mode="markers+text", text=[r["month"] for r in rows],
+                                 textposition="top center", textfont=dict(size=10, color=col("mut")),
+                                 marker=dict(size=9, color=c, line=dict(width=1, color=col("card"))),
+                                 showlegend=False, hovertemplate="%{text}: %{x:.2f}, residual %{y:+.1f}%<extra></extra>"),
+                      row=1, col=i)
+        fig.update_xaxes(title_text=xt, row=1, col=i)
+    _base(fig, 330, legend=False)
+    fig.update_layout(margin=dict(l=8, r=8, t=34, b=8))
+    fig.update_xaxes(zeroline=False)
+    fig.update_yaxes(title_text="residual, %", row=1, col=1)
+    fig.update_annotations(font=dict(size=12, color=col("ink")))
+    return fig
+
+
+def fig_prereg(B):
+    X = B["experiment"]
+    P = X["pred"]
+    L = [p["label"] for p in P]
+    fig = go.Figure()
+    for k, name, c, dash in (("dust", "If dust", col("dim"), "solid"), ("kt", "If sky", col("rain"), "solid"),
+                             ("tcell", "If heat", col("sun"), "solid")):
+        fig.add_trace(go.Scatter(x=L, y=[p[k] for p in P], name=name, mode="lines+markers",
+                                 line=dict(color=c, width=2, dash=dash),
+                                 marker=dict(size=[7 if not p[k + "_extrap"] else 9 for p in P],
+                                             symbol=["circle" if not p[k + "_extrap"] else "circle-open" for p in P]),
+                                 hovertemplate=name + ", %{x}: %{y:+.1f}%<extra></extra>"))
+    r = X["rule"]
+    fig.add_hrect(y0=r["dust_below"], y1=r["heat_above"], fillcolor=col("rain", .07), line_width=0)
+    if X["outcome"]:
+        fig.add_trace(go.Scatter(x=[o["month"] for o in X["outcome"]],
+                                 y=[o["frozen"] for o in X["outcome"]], name="Metered", mode="markers",
+                                 marker=dict(size=13, symbol="diamond", color=col("ink"))))
+    _base(fig, 300)
+    fig.update_yaxes(title_text="residual vs frozen model, %", zeroline=True, zerolinecolor=col("ink"),
+                     zerolinewidth=1)
+    return fig
+
+
 FIGURES = {
     "daily": (fig_daily, "Daily sunlight (left axis, with its 7-day mean) and rainfall (right axis, hanging from the top) for every billed day. NASA POWER, at the roof's coordinates."),
     "calendar": (fig_calendar, "Each cell is one day: deeper colour means more sunlight; blue dots mark rain, sized by millimetres. The monsoon arrives as a run of pale cells from mid-June."),
@@ -491,6 +546,8 @@ FIGURES = {
     "dimming": (fig_dimming, "Annual mean sunlight at these coordinates, 1984–2025: what reached the ground (measured) and what would on a cloudless day (clear-sky). Dashed: trends."),
     "kt": (fig_kt, "Clearness index, measured ÷ clear-sky. Flat means cloud cover has not changed."),
     "seasons": (fig_seasons, "Seasonal sunlight in the first and the latest decade of the record."),
+    "experiment": (fig_experiment, "Each dot is one of the nine discovery months: its residual against a dust proxy (days since rain, weighted by sunlight), cell temperature, and sky clearness. ρ is the rank correlation; p is an exact one-sided permutation test."),
+    "prereg": (fig_prereg, "What each explanation predicts for the winter bills, written down on 8 November 2026. Open circles fall outside the range the fit was made on. Shaded: the band where the verdict is 'sky'. Metered diamonds appear as bills arrive."),
     "life": (fig_life, "Annual output over the panels' 30-year power warranty. Ageing follows the datasheet warranty line; dimming extrapolates the 42-year trend, a downside case rather than a forecast."),
 }
 

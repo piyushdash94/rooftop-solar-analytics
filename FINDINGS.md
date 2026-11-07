@@ -133,9 +133,43 @@ March (−7.0%) and May (−8.1%) are the only real shortfalls.
 
 March is the story of a hunch that was wrong. Early on we flagged it as suspicious, reasoning that March in Odisha is usually drier and sunnier than April. The satellite record said otherwise: March 2026 received less sun than April. Most of March's low output was weather, and only the residual in the chart survived once the weather was accounted for.
 
-May had the most sun of any month, the highest mean air temperature and the worst conversion, even after the model's heat correction. Heat beyond what the model captures, and pre-monsoon dust, are the candidates. April and June, which followed 75 and 162 mm of rain, both came in above expectation (+2.8% and +2.9%), which fits dust being washed off. But May itself had 59 mm of rain and still fell short, so monthly bills cannot separate the two.
+May had the most sun of any month, the highest mean air temperature and the worst conversion, even after the model's heat correction. Heat beyond what the model captures, and pre-monsoon dust, are the candidates. April and June, which followed 75 and 162 mm of rain, both came in above expectation (+2.8% and +2.9%), which fits dust being washed off. But May itself had 59 mm of rain and still fell short, so monthly bills cannot separate the two. The experiment further down tries.
 
 July and August came in +3.3% and +3.0% above expectation, within the model's usual scatter. Our first version showed them 7 to 10% high, and we blamed the daily formula that splits direct from diffuse light under heavy cloud. That explanation was wrong. NASA later revised its July sunlight up by about 5% and August by about 9%, and the excess disappeared. The early satellite estimates had under-read the monsoon.
+
+## An experiment: dust, heat or sky?
+
+The shortfalls left a question. Was it dust on the glass, heat the model under-counts, or something about clear skies? Each explanation leaves its own fingerprint in the data, so each can be tested.
+
+- **Dust.** Dust builds up between rains and washes off in a downpour. For every day we counted the days since the last rain of at least 5 mm, starting from zero on the day the new panels went up, and averaged that over each billing month, giving bright days more weight. Prediction: the longer the dry spell, the lower the residual.
+- **Heat.** If the model's heat correction is too gentle, the hottest months will still fall short. Proxy: the modelled cell temperature. Prediction: hotter cells, lower residual.
+- **Sky.** If the model treats clear and cloudy days unevenly, the residual will track how clear the sky was. Proxy: the clearness index, measured sunlight ÷ clear-sky sunlight.
+
+We tested each on the 9 months with a rank correlation and an exact permutation test. The test asks how often a random shuffle of the months would give a correlation at least this strong. With nine points, it makes no assumptions we cannot check.
+
+![Each dot is one of the nine discovery months: its residual against a dust proxy (days since rain, weighted by sunlight), cell temperature, and sky clearness. ρ is the rank correlation; p is an exact one-sided permutation test.](article/figures/experiment.png)
+
+*Each dot is one of the nine discovery months: its residual against a dust proxy (days since rain, weighted by sunlight), cell temperature, and sky clearness. ρ is the rank correlation; p is an exact one-sided permutation test.*
+
+All three point the same way: dust ρ = −0.63 (p = 0.039), heat −0.66 (p = 0.029), sky −0.73 (p = 0.016). Running three tests raises the odds of a lucky hit, so we corrected for it (Holm). Only the sky clears 0.05, and only just, at 0.047. Dust and heat sit at 0.059.
+
+The trouble is that the three travel together. In Bhubaneswar the dry months are also the clear months and the hot months. The dust proxy correlates +0.71 with clearness and +0.75 with cell temperature. So we asked which one survives when another is held fixed. Holding clearness fixed, the dust correlation shrinks to −0.22. Holding dust fixed, clearness keeps −0.52. Heat also keeps −0.52 with clearness held fixed. Dust is the weakest of the three. Heat and sky cannot be told apart with these months.
+
+April and May show the limit. Their cells ran equally hot and their skies were equally clear, yet April came in at +2.8% and May at −8.1%. None of the three proxies separates them, so part of May's shortfall remains unexplained.
+
+### A forecast to settle it
+
+Winter pulls the three apart. From November to February the sky stays clear, the cells run cool and it rarely rains, so the dry spell grows from about 20 days to about 58. Feeding the typical winter weather of 2016–2025 into each fit gives three different forecasts.
+
+- If **dust** drives the residual, it should sink month by month, from −3.1% in November to about −11.7% in February. December–January average: −7.2%.
+- If **heat** drives it, cool winter cells should push it up. December–January average: +5.0%.
+- If **sky** drives it, it should stay flat. December–January average: −2.2%.
+
+![What each explanation predicts for the winter bills, written down on 8 November 2026. Open circles fall outside the range the fit was made on. Shaded: the band where the verdict is 'sky'. Metered diamonds appear as bills arrive.](article/figures/prereg.png)
+
+*What each explanation predicts for the winter bills, written down on 8 November 2026. Open circles fall outside the range the fit was made on. Shaded: the band where the verdict is 'sky'. Metered diamonds appear as bills arrive.*
+
+We wrote this down on 8 November 2026, before any winter bill. The model's efficiency is frozen at 0.913, so new months cannot shift the yardstick. The verdict uses the average of the December and January residuals. Below −4.7% favours dust, above +1.4% favours heat, and anything in between favours sky. A fall of five points or more from November to February also counts for dust. Two months carry noise of about ±3.1 points, so there is roughly a 21% chance of mistaking sky for dust and a 13% chance of mistaking it for heat. The dust and heat fits also reach beyond the range they were built on (open circles), which is why the rule rests on the order of the three lines rather than their exact values. The test assumes nobody washes the panels this winter.
 
 ## 2026 was not a normal year
 
@@ -253,7 +287,7 @@ Two slow losses compound. The panels age: the datasheet warrants at least 99% of
 - **Data.** Nine TPCODL bills, 8 February 2026 to 1 November 2026, reconciled against cumulative meter readings. NASA POWER daily weather for the billed days, ten years of daily history (2016 to 2025), and the monthly and annual record back to 1984 [1].
 - **Model one, for forecasting.** Generation per day = a × sunlight + b, fitted by least squares on the nine months.
 - **Model two, for diagnosis and the typical-year forecast.** Sunlight on the panels × heat derate × kWp × η, with η the only fitted number.
-- **Validation.** Two genuine out-of-sample months (September, then October against a published forecast) and leave-one-out across all nine.
+- **Validation.** Two genuine out-of-sample months (September, then October against a published forecast) and leave-one-out across all nine. A pre-registered winter test of three explanations for the residuals, scored against a frozen model.
 - **Assumptions.** Panels fixed at 12° facing south. Ground reflectivity 0.12. Cell temperature from a NOCT of 43 °C. Tariff slabs of ₹2.90, 4.70, 5.70 and 6.10 per unit plus 4% duty. The house empty for 7.5 days in May and guests for about a week in October (demand only). White-surface gain of 12% from the datasheet's rear-gain table.
 - **Limits.** Nine monthly points. An efficiency fitted on the same months it judges. Satellite estimates for a grid cell rather than a sensor on the roof. No inverter-level data.
 
