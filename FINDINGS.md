@@ -79,7 +79,7 @@ Every analysis is a list of decisions about what to ignore. Here is ours.
 | Power cuts | Not modelled | No logs. The family estimates about 5 hours a month in daylight. |
 | Ground reflectivity | Fixed at 0.12 | Dark concrete. Changed only in the white-paint scenario. |
 | Panel ageing | Ignored for 8 months | About 0.4% a year. Included in the lifetime outlook. |
-| Who is at home | Demand only | The house stood empty for about a week in May. That changes what the house used, never what the panels made. |
+| Who is at home | Demand only | The house stood empty for about a week in May and had guests for about a week in October. That changes what the house used, never what the panels made. |
 
 ## Did the line see the future?
 
@@ -179,6 +179,8 @@ Solar used at home was steady, at 160 to 253 kWh a month. Demand was not. It ros
 
 Demand follows the heat. Measured by cooling-degree-days, how far the daily mean temperature sat above 25 °C, the correlation is +0.90. Demand here is counted per occupied day, because the house stood empty for about a week in May, and the family recalls importing roughly 200 fewer units than usual. An absence of 7.5 days reproduces that figure, so May's demand is spread over its occupied days only.
 
+October broke the pattern the other way. It was cooler than September, yet the house used 15% more per day (22.9 to 26.2 kWh). We had guests for about a week. Fitted on the other months, heat alone would predict 20.4 kWh a day for October, which leaves about 180 kWh unexplained. If the guests account for all of it, that is roughly 26 kWh a day for their week, more than the house normally uses in a day, so the bills cannot say how much belongs to them. With October set aside, the correlation with heat is +0.95.
+
 ![What each bill cost and what solar saved, slab by slab under net metering, with the running total.](article/figures/money.png)
 
 *What each bill cost and what solar saved, slab by slab under net metering, with the running total.*
@@ -252,7 +254,7 @@ Two slow losses compound. The panels age: the datasheet warrants at least 99% of
 - **Model one, for forecasting.** Generation per day = a × sunlight + b, fitted by least squares on the nine months.
 - **Model two, for diagnosis and the typical-year forecast.** Sunlight on the panels × heat derate × kWp × η, with η the only fitted number.
 - **Validation.** Two genuine out-of-sample months (September, then October against a published forecast) and leave-one-out across all nine.
-- **Assumptions.** Panels fixed at 12° facing south. Ground reflectivity 0.12. Cell temperature from a NOCT of 43 °C. Tariff slabs of ₹2.90, 4.70, 5.70 and 6.10 per unit plus 4% duty. The house empty for 7.5 days in May (demand only). White-surface gain of 12% from the datasheet's rear-gain table.
+- **Assumptions.** Panels fixed at 12° facing south. Ground reflectivity 0.12. Cell temperature from a NOCT of 43 °C. Tariff slabs of ₹2.90, 4.70, 5.70 and 6.10 per unit plus 4% duty. The house empty for 7.5 days in May and guests for about a week in October (demand only). White-surface gain of 12% from the datasheet's rear-gain table.
 - **Limits.** Nine monthly points. An efficiency fitted on the same months it judges. Satellite estimates for a grid cell rather than a sensor on the roof. No inverter-level data.
 
 Every number and chart in this piece is regenerated from the project's data with a single command.

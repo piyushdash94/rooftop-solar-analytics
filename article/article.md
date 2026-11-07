@@ -69,7 +69,7 @@ Every analysis is a list of decisions about what to ignore. Here is ours.
 | Power cuts | Not modelled | No logs. The family estimates about 5 hours a month in daylight. |
 | Ground reflectivity | Fixed at [[albedo]] | Dark concrete. Changed only in the white-paint scenario. |
 | Panel ageing | Ignored for 8 months | About 0.4% a year. Included in the lifetime outlook. |
-| Who is at home | Demand only | The house stood empty for about a week in May. That changes what the house used, never what the panels made. |
+| Who is at home | Demand only | The house stood empty for about a week in May and had guests for about a week in October. That changes what the house used, never what the panels made. |
 
 ## Did the line see the future?
 
@@ -153,6 +153,8 @@ Solar used at home was steady, at [[self_min]] to [[self_max]] kWh a month. Dema
 
 Demand follows the heat. Measured by cooling-degree-days, how far the daily mean temperature sat above 25 °C, the correlation is [[cdd_occ]]. Demand here is counted per occupied day, because the house stood empty for about a week in May, and the family recalls importing roughly 200 fewer units than usual. An absence of [[absent]] days reproduces that figure, so May's demand is spread over its occupied days only.
 
+October broke the pattern the other way. It was cooler than [[guest_prev]], yet the house used [[guest_rise]]% more per day ([[guest_prev_dem]] to [[guest_dem]] kWh). We had guests for about a week. Fitted on the other months, heat alone would predict [[guest_heat_dem]] kWh a day for October, which leaves about [[guest_excess]] kWh unexplained. If the guests account for all of it, that is roughly [[guest_per_day]] kWh a day for their week, more than the house normally uses in a day, so the bills cannot say how much belongs to them. With October set aside, the correlation with heat is [[cdd_host]].
+
 {{fig:money}}
 
 Under net metering, every exported unit is credited against an imported one, so the bill follows imports minus exports. Comparing each bill with what it would have been without solar, slab by slab at the domestic tariff {{ref:tariff}}, solar has saved ₹[[saved_total]] so far.
@@ -208,7 +210,7 @@ Two slow losses compound. The panels age: the datasheet warrants at least 99% of
 - **Model one, for forecasting.** Generation per day = a × sunlight + b, fitted by least squares on the nine months.
 - **Model two, for diagnosis and the typical-year forecast.** Sunlight on the panels × heat derate × kWp × η, with η the only fitted number.
 - **Validation.** Two genuine out-of-sample months (September, then October against a published forecast) and leave-one-out across all nine.
-- **Assumptions.** Panels fixed at [[tilt]]° facing south. Ground reflectivity [[albedo]]. Cell temperature from a NOCT of [[noct]] °C. Tariff slabs of ₹2.90, 4.70, 5.70 and 6.10 per unit plus 4% duty. The house empty for [[absent]] days in May (demand only). White-surface gain of [[white_light_pct]]% from the datasheet's rear-gain table.
+- **Assumptions.** Panels fixed at [[tilt]]° facing south. Ground reflectivity [[albedo]]. Cell temperature from a NOCT of [[noct]] °C. Tariff slabs of ₹2.90, 4.70, 5.70 and 6.10 per unit plus 4% duty. The house empty for [[absent]] days in May and guests for about a week in October (demand only). White-surface gain of [[white_light_pct]]% from the datasheet's rear-gain table.
 - **Limits.** Nine monthly points. An efficiency fitted on the same months it judges. Satellite estimates for a grid cell rather than a sensor on the roof. No inverter-level data.
 
 Every number and chart in this piece is regenerated from the project's data with a single command.

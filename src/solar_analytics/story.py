@@ -28,6 +28,7 @@ from .physics import effective_irradiation, load_daily, period_rollup
 KWP = SITE.kwp
 CDD_BASE = 25.0                 # degC, cooling-degree-day base on daily mean air temperature
 WHITE_GAIN = 0.12               # modelled bifacial rear gain from a white roof (datasheet-based)
+GUEST_MONTH = "Oct"             # owner: guests stayed about a week in October (demand only)
 PUBLISHED_OCT_FORECAST = 388.8  # kWh, typical-October forecast published 2026-10-06, before the bill
 SURROUND_COOL = 1.3             # degC, module cooling over a cool-roof coating, measured on monofacial panels
                                 # (Mahmood et al. 2023); used only as the other bound of the white-roof heat effect
@@ -259,6 +260,14 @@ def compute() -> dict:
     may = M[M.occ_days < M.days].iloc[0] if (M.occ_days < M.days).any() else None
     cdd_raw = float(np.corrcoef(M.cdd, M.dem_day)[0, 1])
     cdd_occ = float(np.corrcoef(M.cdd, M.dem_occ)[0, 1])
+    # Guests: fit demand-vs-heat on the other months, then see how far the guest month sits above it.
+    host = M.month != GUEST_MONTH
+    cdd_host = float(np.corrcoef(M.cdd[host], M.dem_occ[host])[0, 1])
+    g = M[~host].iloc[0]
+    ka, kb = np.polyfit(M.cdd[host], M.dem_occ[host], 1)
+    guest_heat_dem = float(ka * g.cdd + kb)
+    guest_excess = float((g.dem_occ - guest_heat_dem) * g.days)
+    prev = M.iloc[list(M.month).index(GUEST_MONTH) - 1]
     sun_only = models[0]
     by_name = {m["name"]: m for m in models}
     norm = pd.DataFrame(normal)
@@ -310,7 +319,11 @@ def compute() -> dict:
         "paint_kwh": f0(paint_kwh), "paint_total": f0(fc_total * (1 + WHITE_GAIN)),
         "paint_inr": f0(round(paint_inr, -2)),
         "pay_lo": f"{PAINT_COST[0] / paint_inr:.1f}", "pay_hi": f"{PAINT_COST[1] / paint_inr:.1f}",
-        "cdd_raw": f"{cdd_raw:+.2f}", "cdd_occ": f"{cdd_occ:+.2f}",
+        "cdd_raw": f"{cdd_raw:+.2f}", "cdd_occ": f"{cdd_occ:+.2f}", "cdd_host": f"{cdd_host:+.2f}",
+        "guest_month": GUEST_MONTH, "guest_dem": f"{g.dem_occ:.1f}", "guest_prev_dem": f"{prev.dem_occ:.1f}",
+        "guest_prev": pd.Timestamp(prev.start).strftime("%B"), "guest_rise": f"{(g.dem_occ / prev.dem_occ - 1) * 100:.0f}",
+        "guest_heat_dem": f"{guest_heat_dem:.1f}", "guest_excess": f0(round(guest_excess, -1)),
+        "guest_per_day": f"{guest_excess / 7:.0f}",
         "dem_feb": f"{M.dem_day.iloc[0]:.0f}", "dem_jun": f"{M.dem_day.iloc[4]:.0f}",
         "dem_rise": f"{(M.dem_day.iloc[4] / M.dem_day.iloc[0] - 1) * 100:.0f}",
     }

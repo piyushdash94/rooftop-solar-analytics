@@ -198,7 +198,7 @@ footer p{max-width:80ch}
 <tr>
 <td>Who is at home</td>
 <td>Demand only</td>
-<td>The house stood empty for about a week in May. That changes what the house used, never what the panels made.</td>
+<td>The house stood empty for about a week in May and had guests for about a week in October. That changes what the house used, never what the panels made.</td>
 </tr>
 </tbody>
 </table></div>
@@ -294,6 +294,7 @@ footer p{max-width:80ch}
 <p>Solar used at home was steady, at 160 to 253 kWh a month. Demand was not. It rose about 75% per day from February to June (20 to 35 kWh a day) as the air conditioning came on, then eased with the rains. The bills went up because the house used more, not because the panels made less. A 3 kWp system against a 1,000 kWh month is undersized for summer rather than underperforming.</p>
 <figure><div class="frame"><div class="plot" data-fig="demand" role="img" aria-label="Household demand per occupied day (bars) and cooling-degree-days (line). May&#x27;s days are counted net of the week the house stood empty."></div></div><figcaption>Household demand per occupied day (bars) and cooling-degree-days (line). May&#x27;s days are counted net of the week the house stood empty.</figcaption></figure>
 <p>Demand follows the heat. Measured by cooling-degree-days, how far the daily mean temperature sat above 25 °C, the correlation is +0.90. Demand here is counted per occupied day, because the house stood empty for about a week in May, and the family recalls importing roughly 200 fewer units than usual. An absence of 7.5 days reproduces that figure, so May's demand is spread over its occupied days only.</p>
+<p>October broke the pattern the other way. It was cooler than September, yet the house used 15% more per day (22.9 to 26.2 kWh). We had guests for about a week. Fitted on the other months, heat alone would predict 20.4 kWh a day for October, which leaves about 180 kWh unexplained. If the guests account for all of it, that is roughly 26 kWh a day for their week, more than the house normally uses in a day, so the bills cannot say how much belongs to them. With October set aside, the correlation with heat is +0.95.</p>
 <figure><div class="frame"><div class="plot" data-fig="money" role="img" aria-label="What each bill cost and what solar saved, slab by slab under net metering, with the running total."></div></div><figcaption>What each bill cost and what solar saved, slab by slab under net metering, with the running total.</figcaption></figure>
 <p>Under net metering, every exported unit is credited against an imported one, so the bill follows imports minus exports. Comparing each bill with what it would have been without solar, slab by slab at the domestic tariff <a class="ref" href="#ref-7">[7]</a>, solar has saved ₹19,926 so far.</p>
 <figure><div class="frame"><div class="plot" data-fig="pies" role="img" aria-label="All nine bills together. Left: bill offset is the green and gold slices together; self-sufficiency is the green slice alone. Right: the same solar, split by where it went."></div></div><figcaption>All nine bills together. Left: bill offset is the green and gold slices together; self-sufficiency is the green slice alone. Right: the same solar, split by where it went.</figcaption></figure>
@@ -327,7 +328,7 @@ footer p{max-width:80ch}
 <li><strong>Model one, for forecasting.</strong> Generation per day = a × sunlight + b, fitted by least squares on the nine months.</li>
 <li><strong>Model two, for diagnosis and the typical-year forecast.</strong> Sunlight on the panels × heat derate × kWp × η, with η the only fitted number.</li>
 <li><strong>Validation.</strong> Two genuine out-of-sample months (September, then October against a published forecast) and leave-one-out across all nine.</li>
-<li><strong>Assumptions.</strong> Panels fixed at 12° facing south. Ground reflectivity 0.12. Cell temperature from a NOCT of 43 °C. Tariff slabs of ₹2.90, 4.70, 5.70 and 6.10 per unit plus 4% duty. The house empty for 7.5 days in May (demand only). White-surface gain of 12% from the datasheet's rear-gain table.</li>
+<li><strong>Assumptions.</strong> Panels fixed at 12° facing south. Ground reflectivity 0.12. Cell temperature from a NOCT of 43 °C. Tariff slabs of ₹2.90, 4.70, 5.70 and 6.10 per unit plus 4% duty. The house empty for 7.5 days in May and guests for about a week in October (demand only). White-surface gain of 12% from the datasheet's rear-gain table.</li>
 <li><strong>Limits.</strong> Nine monthly points. An efficiency fitted on the same months it judges. Satellite estimates for a grid cell rather than a sensor on the roof. No inverter-level data.</li>
 </ul>
 <p>Every number and chart in this piece is regenerated from the project's data with a single command.</p>

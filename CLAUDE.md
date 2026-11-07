@@ -93,8 +93,10 @@ comparison (`story.compute()["models"]`).
   reproduces 191). Folded into demand as an assumption (per occupied day); not a separate
   section of the article. Generation is never adjusted, and the system ran normally.
 - Bill offset 46% = self-sufficiency 26% + export credits 20%; shown as a donut chart.
-- October demand rose 14%/day vs September (22.9 → 26.2 kWh) despite fewer cooling-degree-days;
-  cause unknown (asked the owner). Do not explain it in the article without their answer.
+- October demand rose 14%/day vs September (22.9 → 26.2 kWh) despite fewer cooling-degree-days.
+  Owner: guests for about a week (GUEST_MONTH in story.py). Heat fitted on the other months
+  predicts 20.4 kWh/day, leaving ~180 kWh; ~26 kWh/day if all guests, so attribution is loose.
+  Heat–demand r = +0.90 with October, +0.95 without. Demand only; generation untouched.
 - Long record: GHI −0.15 kWh/m²/day per decade (p < 0.0001), clear-sky −0.18, clearness index
   flat (p = 0.53): at this grid cell the decline is clear-sky (aerosol). Nationally the
   literature finds clouds dominant (Jadhav 2024), with this region the most aerosol-affected.
