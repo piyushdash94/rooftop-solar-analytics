@@ -39,7 +39,7 @@ def readings() -> pd.DataFrame:
 
 def test_bills_load_nine_periods(bills):
     assert len(bills) == 9
-    assert bills["days"].sum() == 267
+    assert bills["days"].sum() == 266   # 8 Feb - 31 Oct, on the corrected reading dates
 
 
 def test_cumulative_totals_match_meters(bills):
@@ -79,7 +79,7 @@ def test_detects_july_export_doubling(bills):
     assert len(issues) == 1, f"expected exactly one defect, got {len(issues)}"
 
     issue = issues[0]
-    assert issue.period_start == "2026-07-02"
+    assert issue.period_start == "2026-07-01"
     assert issue.field == "export_kwh"
     assert issue.expected == pytest.approx(102.05, abs=0.01)
     assert issue.found == pytest.approx(204.10, abs=0.01)
@@ -91,7 +91,7 @@ def test_all_other_periods_reconcile(bills):
     """Only July is defective; the other seven cycles are clean."""
     issues = validate_bills(bills)
     flagged = {i.period_start for i in issues}
-    assert flagged == {"2026-07-02"}
+    assert flagged == {"2026-07-01"}
 
 
 def test_under_billing_amount(bills):
@@ -104,15 +104,15 @@ def test_under_billing_amount(bills):
 
 
 def test_occupancy_adjusts_only_may():
-    """Nobody was home 7.5 days (calibrated) in the May period; every other period is full."""
+    """Mostly empty 8 days in May (dated from the daily data); every other period is full."""
     from solar_analytics.loaders import load_occupancy, occupied_days
 
     bills = load_bills()
     occ = occupied_days(bills, load_occupancy())
     expected = bills["days"].astype(float).copy()
-    may = bills["period_start"] == pd.Timestamp("2026-05-02")
+    may = bills["period_start"] == pd.Timestamp("2026-05-01")
     assert may.sum() == 1
-    expected[may] -= 7.5
+    expected[may] -= 8.0
     assert occ.tolist() == pytest.approx(expected.tolist())
 
 
@@ -124,22 +124,31 @@ def test_may_demand_per_occupied_day_follows_heat():
     demand = b["import_kwh"] + b["generation_kwh"] - b["export_kwh"]
     per_day = demand / occupied_days(b, load_occupancy())
     apr, may, jun = per_day.iloc[2], per_day.iloc[3], per_day.iloc[4]
-    assert may == pytest.approx(35.8, abs=0.2)
+    assert may == pytest.approx(36.6, abs=0.2)
     assert apr < may
     assert abs(may - jun) < 2.0
 
 
-def test_absence_matches_owner_reported_import_shortfall():
-    """The owner reports ~200 fewer imported units in May. A 7.5-day absence should
-    reproduce that, which is what pins the occupancy figure."""
-    from solar_analytics.loaders import load_occupancy, occupied_days
+def test_absence_days_match_daily_data():
+    """The occupancy row is the away window located in the daily portal data, not a guess."""
+    from solar_analytics.loaders import load_occupancy
+    from solar_analytics.story import EVENTS
+
+    a, b = (pd.Timestamp(x) for x in EVENTS["away"])
+    assert load_occupancy()["absent_days"].iloc[0] == (b - a).days + 1
+
+
+def test_daily_portal_reconciles_on_corrected_dates():
+    """Every complete period matches the bill on both registers; the printed dates do not."""
+    from solar_analytics.loaders import reconcile_daily
 
     b = load_bills()
-    may = b.iloc[3]
-    od = occupied_days(b, load_occupancy()).iloc[3]
-    gen, imp, exp, d = may["generation_kwh"], may["import_kwh"], may["export_kwh"], may["days"]
-    self_used = gen - exp
-    demand = imp + self_used
-    self_cf = min(self_used / (gen / d * od), 1.0) * gen
-    extra_import = (demand / od * d - self_cf) - imp
-    assert extra_import == pytest.approx(190, abs=15)
+    r = reconcile_daily(b)
+    full = r[r.portal_days == r.days]
+    assert len(full) == 7
+    assert full[["import_diff", "export_diff"]].abs().max().max() < 0.05
+    p = b.copy()
+    p["period_start"] = pd.to_datetime(p.printed_start)
+    p["period_end"] = pd.to_datetime(p.printed_end)
+    rp = reconcile_daily(p)
+    assert abs(rp.import_diff.iloc[1]) / b.import_kwh.iloc[1] > 0.05   # March, printed dates

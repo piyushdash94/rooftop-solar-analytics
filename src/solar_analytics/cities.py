@@ -17,8 +17,9 @@ from scipy import stats
 
 from .config import DATA_DIR, RAW_DIR, SITE
 from .physics import effective_irradiation, load_daily
+from .story import ETA_FROZEN
 
-ETA = 0.9132  # system efficiency fitted on the Bhubaneswar bills (story.ETA_FROZEN)
+ETA = ETA_FROZEN  # system efficiency fitted on the Bhubaneswar bills, frozen in story.py
 KWP = SITE.kwp
 MONSOON = [6, 7, 8, 9]  # June to September, the southwest monsoon
 SEASONS = {"winter": [12, 1, 2], "pre": [3, 4, 5], "monsoon": [6, 7, 8, 9], "post": [10, 11]}

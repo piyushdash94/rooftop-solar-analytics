@@ -22,9 +22,9 @@ We set three tests and the bar each had to clear, before looking at any results.
 
 ## How we ran it
 
-We kept everything about the array fixed and changed only the weather. Same 3 kWp of bifacial panels, same 12° tilt facing south, same dark concrete underneath, and the same system efficiency of 0.913 that we fitted to the Bhubaneswar bills. For each city we downloaded ten years of daily NASA POWER satellite weather, 2016 to 2025 [1], and ran it through the physics model from the first article: sunlight on the panel plane, a heat correction from the module's datasheet [2], then kilowatt-hours.
+We kept everything about the array fixed and changed only the weather. Same 3 kWp of bifacial panels, same 12° tilt facing south, same dark concrete underneath, and the same system efficiency of 0.919 that we fitted to the Bhubaneswar bills. For each city we downloaded ten years of daily NASA POWER satellite weather, 2016 to 2025 [1], and ran it through the physics model from the first article: sunlight on the panel plane, a heat correction from the module's datasheet [2], then kilowatt-hours.
 
-Two checks before trusting it. Our fresh download for Bhubaneswar gives 4,521 kWh a year, within 0.1% of the 4,518 kWh typical year in the first article, which was calibrated on real bills. And the twelve cities average 4.4 kWh per kWp a day, inside the 3.5 to 4.5 band the World Bank reports for India [3].
+Two checks before trusting it. Our fresh download for Bhubaneswar gives 4,548 kWh a year, within 0.1% of the 4,544 kWh typical year in the first article, which was calibrated on real bills. And the twelve cities average 4.4 kWh per kWp a day, inside the 3.5 to 4.5 band the World Bank reports for India [3].
 
 One limitation matters. A fixed 12° tilt is close to ideal in the south and a little flat for the north, where the cities sit at up to 28.6° latitude. Tilting every array to its own latitude instead barely changes the order: the two rankings correlate at 0.99.
 
@@ -34,7 +34,7 @@ One limitation matters. A fixed 12° tilt is close to ideal in the south and a l
 
 *The same array, 12° south, dark concrete roof, run through 2016–2025 NASA weather in each city. Dot: ten-year average. Line: worst to best year. Green: Bhubaneswar.*
 
-Ahmedabad comes first at 5,199 kWh a year and Kolkata last at 4,286, a gap of 21% from nothing but weather. Bhubaneswar is 10th of 12. The same panels on a roof in Ahmedabad would make about 15% more.
+Ahmedabad comes first at 5,230 kWh a year and Kolkata last at 4,311, a gap of 21% from nothing but weather. Bhubaneswar is 10th of 12. The same panels on a roof in Ahmedabad would make about 15% more.
 
 ## Heat is a tax, not a verdict
 
@@ -83,7 +83,7 @@ Two smaller results are worth recording. Output is steady from year to year ever
 ## How we worked
 
 - **Data.** NASA POWER daily point data for each city centre, 2016 to 2025. Sunlight comes from CERES satellite products at 1° resolution, so each "city" is really a 100 km grid cell.
-- **Model.** The physics model from the first article: daily diffuse split, sunlight on a 12° south-facing plane, NOCT cell temperature, one efficiency of 0.913 fitted on Bhubaneswar's bills and applied everywhere.
+- **Model.** The physics model from the first article: daily diffuse split, sunlight on a 12° south-facing plane, NOCT cell temperature, one efficiency of 0.919 fitted on Bhubaneswar's bills and applied everywhere.
 - **Tests.** Three criteria written before running. Spreads are standard deviations of logarithms, so they read as percentages. Season and haze shares are covariance shares, which add up to 100%.
 - **Limits.** Twelve cities. The same tilt, roof and efficiency everywhere. Dust that settles on the panels is not modelled, and it can be as large a loss as dust in the air [4]. No tariffs or money: this is about kilowatt-hours only.
 

@@ -54,17 +54,20 @@ def test_september_out_of_sample_close(B):
     assert abs(sep["gen"] / B["fit"]["sep_pred"] - 1) < 0.05
 
 
-def test_extra_features_do_not_beat_sunlight(B):
+def test_temperature_helps_rain_does_not(B):
+    """On the corrected dates heat carries information sunlight does not; rain only repeats it."""
     m = {x["name"]: x["mae"] for x in B["models"]}
-    assert m["Sunlight only"] <= m["Sunlight + temperature"]
+    assert m["Sunlight + temperature"] < m["Sunlight only"]
     assert m["Sunlight only"] <= m["Sunlight + rain"]
     assert m["Rain only"] > m["Sunlight only"]
+    assert m["Physics: panel-plane sun × heat"] == min(m.values())
 
 
-def test_march_and_may_are_the_shortfalls(B):
-    worst = sorted(B["monthly"], key=lambda m: m["resid"])[:2]
-    assert {w["month"] for w in worst} == {"Mar", "May"}
-    assert all(w["resid"] < -5 for w in worst)
+def test_may_is_the_only_clear_shortfall(B):
+    """March's old -7% was a 31-vs-29-day artefact; May remains."""
+    r = {m["month"]: m["resid"] for m in B["monthly"]}
+    assert min(r, key=r.get) == "May" and r["May"] < -8
+    assert r["Mar"] > 0
 
 
 def test_monsoon_2026_darker_than_any_recent_year(B):
@@ -129,13 +132,17 @@ def test_white_roof_heat_bounds(B):
 
 
 def test_preregistered_winter_test_is_frozen(B):
-    """Written down on 2026-11-08. The rule must not drift as winter bills arrive."""
+    """Registered 2026-11-08, amended once on 2026-11-18 (corrected billing dates), before any
+    winter bill. Both the original and the amended rule must stay fixed as winter bills arrive."""
     from solar_analytics import story
-    frozen = (story.ETA_FROZEN, story.EXP_N, story.DUST_RAIN_MM, story.WINTER)
-    assert frozen == (0.9132, 9, 5.0, [11, 12, 1, 2])
+    frozen = (story.ETA_FROZEN, story.EXP_N, story.DUST_RAIN_MM, story.WINTER, story.AMEND_DATE)
+    assert frozen == (0.9186, 9, 5.0, [11, 12, 1, 2], "2026-11-18")
+    o = story.PREREG_ORIGINAL
+    assert (o["eta"], o["pdj_dust"], o["pdj_kt"], o["pdj_tcell"]) == (0.9132, -7.2, -2.2, 5.0)
+    assert (o["dust_below"], o["heat_above"]) == (-4.7, 1.4)
     f = B["facts"]
-    assert (f["pdj_dust"], f["pdj_kt"], f["pdj_tcell"]) == ("−7.2", "−2.2", "+5.0")
-    assert (f["b_sd"], f["b_sh"]) == ("−4.7", "+1.4")
+    assert (f["pdj_dust"], f["pdj_kt"], f["pdj_tcell"]) == ("−0.8", "−2.6", "+3.2")
+    assert f["b_heat"] == "+1.2"
 
 
 def test_dust_is_weakest_once_sky_is_held_fixed(B):

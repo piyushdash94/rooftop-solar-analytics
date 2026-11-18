@@ -314,6 +314,26 @@ def fig_demand(B):
     return fig
 
 
+def fig_hinge(B):
+    D = B["daily_demand"]
+    P = D["points"]
+    fig = go.Figure()
+    for ev, name, c, size in (("", "Ordinary day", col("ink", .28), 6), ("away", "House mostly empty, May", col("rain"), 9),
+                              ("guests", "Guests, Sep–Oct", col("sun"), 9), ("dip", "Unexplained dip, July", col("dim"), 9)):
+        pts = [p for p in P if p["e"] == ev]
+        fig.add_trace(go.Scatter(x=[p["t"] for p in pts], y=[p["y"] for p in pts], name=name, mode="markers",
+                                 marker=dict(size=size, color=c), text=[p["d"] for p in pts],
+                                 hovertemplate="%{text}: %{y:.1f} kWh at %{x:.1f} °C<extra></extra>"))
+    t = np.linspace(min(p["t"] for p in P), max(p["t"] for p in P), 60)
+    fig.add_trace(go.Scatter(x=t, y=D["base"] + D["slope"] * np.maximum(0, t - D["tb"]), mode="lines",
+                             name=f"Fit: flat to {D['tb']:.1f} °C, then +{D['slope']:.1f} kWh/°C",
+                             line=dict(color=col("pv"), width=2.4), hoverinfo="skip"))
+    _base(fig, 340)
+    fig.update_xaxes(title_text="daily mean air temperature, °C")
+    fig.update_yaxes(title_text="household demand, kWh per day")
+    return fig
+
+
 def fig_pies(B):
     M = B["monthly"]
     gen = sum(m["gen"] for m in M)
@@ -514,7 +534,9 @@ def fig_prereg(B):
                                              symbol=["circle" if not p[k + "_extrap"] else "circle-open" for p in P]),
                                  hovertemplate=name + ", %{x}: %{y:+.1f}%<extra></extra>"))
     r = X["rule"]
-    fig.add_hrect(y0=r["dust_below"], y1=r["heat_above"], fillcolor=col("rain", .07), line_width=0)
+    fig.add_hrect(y0=r["heat_above"], y1=max(max(p["tcell"] for p in P), r["heat_above"]) + 3,
+                  fillcolor=col("sun", .08), line_width=0)
+    fig.add_hline(y=r["heat_above"], line=dict(color=col("sun"), width=1, dash="dot"))
     if X["outcome"]:
         fig.add_trace(go.Scatter(x=[o["month"] for o in X["outcome"]],
                                  y=[o["frozen"] for o in X["outcome"]], name="Metered", mode="markers",
@@ -546,8 +568,9 @@ FIGURES = {
     "dimming": (fig_dimming, "Annual mean sunlight at these coordinates, 1984–2025: what reached the ground (measured) and what would on a cloudless day (clear-sky). Dashed: trends."),
     "kt": (fig_kt, "Clearness index, measured ÷ clear-sky. Flat means cloud cover has not changed."),
     "seasons": (fig_seasons, "Seasonal sunlight in the first and the latest decade of the record."),
+    "hinge": (fig_hinge, "Each dot is one day: household demand (import + solar used at home) against that day's mean air temperature. Demand is flat until cooling starts, then climbs. Coloured days are the household events; they were left out of the fit."),
     "experiment": (fig_experiment, "Each dot is one of the nine discovery months: its residual against a dust proxy (days since rain, weighted by sunlight), cell temperature, and sky clearness. ρ is the rank correlation; p is an exact one-sided permutation test."),
-    "prereg": (fig_prereg, "What each explanation predicts for the winter bills, written down on 8 November 2026. Open circles fall outside the range the fit was made on. Shaded: the band where the verdict is 'sky'. Metered diamonds appear as bills arrive."),
+    "prereg": (fig_prereg, "What each explanation predicts for the winter bills, as amended on 18 November 2026 after the billing dates were corrected. Open circles fall outside the range the fit was made on. Shaded: the band where the verdict is 'heat'; below the dotted line, heat is ruled out but dust and sky cannot be told apart. Metered diamonds appear as bills arrive."),
     "life": (fig_life, "Annual output over the panels' 30-year power warranty. Ageing follows the datasheet warranty line; dimming extrapolates the 42-year trend, a downside case rather than a forecast."),
 }
 

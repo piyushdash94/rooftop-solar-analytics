@@ -14,7 +14,8 @@ next year?
 **[Read the article](https://piyushdash94.github.io/rooftop-solar-analytics/)** (interactive charts) ·
 [PDF](article/rooftop-solar-article.pdf) · [Blog version](article/blog.md) · `streamlit run app/streamlit_app.py`
 
-Data: nine TPCODL bills, 8 February to 1 November 2026 (267 days, through the October bill).
+Data: nine TPCODL bills, 8 February to 31 October 2026 (266 days, through the October bill), plus
+263 days of daily import and export from the TPCODL consumer portal.
 
 ---
 
@@ -22,14 +23,16 @@ Data: nine TPCODL bills, 8 February to 1 November 2026 (267 days, through the Oc
 
 | Question | Answer |
 |---|---|
-| What drives output? | **Sunlight explains 91%** of month-to-month generation. Adding temperature or rain made held-out predictions worse, so the model stayed simple. |
+| What drives output? | **Sunlight explains 93%** of month-to-month generation. Adding temperature improves held-out predictions (4.3% miss vs 5.1%); adding rain makes them worse. |
 | Can it forecast? | The forecast published before October's bill said **389 kWh; the meter read 384 (−1.1%)**. Across all months, holding each out in turn, the typical miss is about 5%. |
-| Is the system healthy? | Yes. Against a physics model, only **March (−7%) and May (−8%)** fall short. March was mostly weather. May is heat or dust; monthly bills cannot separate the two. |
-| Dust, heat or sky? | An open experiment. Across nine months, shortfalls track dust, heat and clear skies alike, because dry months are also hot and clear. Dust fades first when sky clearness is held fixed. Each explanation predicts something different for winter (dust: residuals sink to about −7%; heat: rise to +5%; sky: stay near −2%), and those forecasts were **written down on 8 November 2026**, before the winter bills. |
-| Why did bills rise? | **Demand rose 75% per day** from February to June (20 → 35 kWh/day) as cooling load grew. Generation did not fall. |
-| What will a year bring? | About **4,520 kWh** in a typical year, and 4,250–4,650 across the last ten years of weather. 2026 is a poor guide: July and August were 20–22% darker than normal, the darkest in ten years. |
+| Were the bills right? | **Not their dates.** Daily portal data matches every bill to 0.01 kWh only after shifting the periods: the March bill covered 29 days, not the 31 printed. That one correction removed a fake March shortfall and revealed temperature's effect. |
+| Is the system healthy? | Yes. Against a physics model, only **May (−9%)** clearly falls short. May is heat or dust; monthly bills cannot separate the two. |
+| Dust, heat or sky? | An open experiment, **pre-registered on 8 November 2026 and amended on 18 November** (still before any winter bill) once the date error was found. On the corrected dates the evidence is weak and dust and sky predict nearly the same winter residual, so the amended test asks only whether heat drives it: a December–January residual above +1.2% says heat. Both the original and amended rules will be scored. |
+| Why did bills rise? | **Demand rose about 75% per day** from February to June as cooling load grew. Daily data shows the shape: flat at 19 kWh a day until the daily mean passes ~25.5 °C, then +2.2 kWh per degree. Generation did not fall. |
+| What did the daily data date? | The house mostly empty 16–23 May (156 kWh below what the heat predicts), guests 30 Sep – 8 Oct (+86 kWh), and one likely long daytime power cut on 2 September. |
+| What will a year bring? | About **4,540 kWh** in a typical year, and 4,280–4,670 across the last ten years of weather. 2026 is a poor guide: July and August were about 20% darker than normal, the darkest in ten years. |
 | What has it saved? | **₹19,926** so far. Generation equals 46% of household demand on the bill; 26% of demand was met directly by the panels at the moment they produced. |
-| Would a white roof help? | About **+506 kWh a year** (+11%), payback 2.5–3.7 years, modelled. It adds light, not cooling: the panels end up about 1.3–2.6 °C warmer, which costs 16–36 kWh of the gain. |
+| Would a white roof help? | About **+509 kWh a year** (+11%), payback 2.5–3.7 years, modelled. It adds light, not cooling: the panels end up about 1.3–2.6 °C warmer, which costs 16–36 kWh of the gain. |
 | Is the sky changing? | Since 1984, sunlight at this location has fallen 0.15 kWh/m² per day per decade. At this grid cell the decline is in the clear-sky component, consistent with aerosols. |
 
 ![Generation per day against sunlight per day, one point per billing month](article/figures/scatter.png)
@@ -52,7 +55,7 @@ yield far more than summer heat**. One of its three tests held.
 - **Haze matters more than cloud.** Splitting the gap into latitude, haze and cloud, haze is the
   largest part (42% over the year). The haziest dry-season skies are in Kolkata, Lucknow,
   Bhubaneswar, Guwahati and Delhi.
-- Ahmedabad tops the table at 5,199 kWh a year; Kolkata is last at 4,286 (21% less).
+- Ahmedabad tops the table at 5,230 kWh a year; Kolkata is last at 4,311 (21% less).
   Bhubaneswar is 10th of 12, and its fresh run agrees with the bill-calibrated article to 0.1%.
 
 ![The same array in twelve cities](research/figures/c_rank.png)
@@ -68,19 +71,21 @@ NASA POWER weather (cached CSV) ┘   sunlight on     every       every       HT
                                     the panels      number      chart       + Streamlit app
 ```
 
-1. **Reconcile the bills.** Every billing period is checked against cumulative meter readings.
-   This caught a print defect on the July bill (export printed as 204.10 kWh; the meter says
-   102.05). The energy charge used the right figure, so it was not an under-billing.
+1. **Reconcile the bills.** Every billing period is checked against cumulative meter readings
+   and against the daily portal data. This caught a print defect on the July bill (export
+   printed as 204.10 kWh; the meter says 102.05; the energy charge used the right figure) and
+   wrong printed reading dates (the corrected periods, and the printed ones, are both kept in
+   `bills.csv`).
 2. **Fetch the weather.** Daily sunlight, temperature and rain for the site's coordinates from
    [NASA POWER](https://power.larc.nasa.gov/): free, no key, cached in `data/raw/` so every
    result reproduces offline.
 3. **Model generation two ways.**
-   - *Sunlight line:* generation per day = 2.18 × sunlight + 1.82 (R² 0.91). One input, two
+   - *Sunlight line:* generation per day = 2.17 × sunlight + 1.92 (R² 0.93). One input, two
      fitted numbers.
    - *Physics model:* sunlight on the 12° panel plane × heat loss × 3 kWp × one fitted
-     efficiency. Its held-out miss is 4.7% against the line's 5.2%, too close to rank with nine
-     months, but it also explains *why* a month over- or under-delivered. It is also the model run over ten years of historical
-     weather for the typical-year forecast.
+     efficiency. The best forecaster (3.8% held-out miss against the line's 5.1%), and it
+     explains *why* a month over- or under-delivered. It is also the model run over ten years
+     of historical weather for the typical-year forecast.
 4. **Choose features by test, not by hunch.** Each candidate model is fitted on all months but
    one and asked to predict the one left out, for every month in turn (leave-one-out). Only what improved
    those held-out predictions stayed.
@@ -104,7 +109,7 @@ published field tests, not measured on this roof. The article labels each.
 pip install -e ".[dev,app,article]"
 python scripts/build_article.py      # site/index.html, article/blog.md, PDF, figures, FINDINGS.md
 streamlit run app/streamlit_app.py   # interactive version with adjustable assumptions
-pytest                               # 41 tests, offline
+pytest                               # 42 tests, offline
 ```
 
 The PDF and PNG charts need a Chromium browser (`playwright install chromium`).
@@ -124,10 +129,11 @@ which one, so the prose gets rewritten rather than going stale.
 ## Layout
 
 ```
-data/                    bills, meter readings, occupancy; data/raw/ holds NASA POWER weather
+data/                    bills, meter readings, daily portal import/export, occupancy;
+                         data/raw/ holds NASA POWER weather
 src/solar_analytics/
   config.py              site, module and tariff facts (the only place they live)
-  loaders.py             read and reconcile bills
+  loaders.py             read and reconcile bills, meters and daily portal data
   physics.py             weather → sunlight on the panels → heat loss → expected energy
   story.py               every number in the article
   figures.py             every chart (Plotly)

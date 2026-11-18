@@ -2,13 +2,13 @@
 
 *Nine months of electricity bills, ten years of satellite weather, and what they say about one bifacial solar array in Bhubaneswar.*
 
-By Piyush Dash · October 2026
+By Piyush Dash · November 2026
 
 In February 2026 a 3 kWp array of bifacial panels went up on the roof of our family home in Satya Vihar, Bhubaneswar. Eight months later we had a folder of bills and a few questions that sounded simple. Is the system working as it should? Why did the bills go up when the panels were new? What will it make next year?
 
-**The data.** Nine monthly TPCODL bills, [[first]] to [[last]], each listing cumulative readings from the solar generation meter and the import–export net meter; a month's units are the difference between two consecutive readings.
+**The data.** Nine monthly TPCODL bills, [[first]] to [[last]], each listing cumulative readings from the solar generation meter and the import–export net meter; a month's units are the difference between two consecutive readings. Later we added [[n_daily]] days of daily import and export from the utility's consumer portal.
 
-We had no inverter app logging output minute by minute, only those monthly numbers. This piece is about how far they can go once you join them to the weather, and about the hunches we had to test, drop or keep along the way.
+We had no inverter app logging output minute by minute, only those numbers. This piece is about how far they can go once you join them to the weather, and about the hunches we had to test, drop or keep along the way.
 
 <div class="glance" markdown="1">
 
@@ -31,7 +31,7 @@ The shape of the year is plain. Through spring the roof received 5 to 6 kWh of s
 
 {{fig:calendar}}
 
-Each billing month then becomes two numbers. **Generation per day** is the month's metered generation divided by the number of days in the billing period. **Sunlight per day** is the average of NASA's daily values over exactly the same dates. For the first bill, that is [[feb_gen]] kWh over [[feb_days]] days, or [[feb_gen_day]] kWh a day, against an average of [[feb_ghi]] kWh/m² of sunlight a day. Dividing by days matters because billing periods run from 22 to 31 days.
+Each billing month then becomes two numbers. **Generation per day** is the month's metered generation divided by the number of days in the billing period. **Sunlight per day** is the average of NASA's daily values over exactly the same dates. For the first bill, that is [[feb_gen]] kWh over [[feb_days]] days, or [[feb_gen_day]] kWh a day, against an average of [[feb_ghi]] kWh/m² of sunlight a day. Dividing by days matters because billing periods run from [[days_min]] to [[days_max]] days.
 
 Plotted month by month, the two move together almost in a straight line.
 
@@ -42,6 +42,14 @@ Plotted month by month, the two move together almost in a straight line.
 
 Sunlight accounts for [[fit_r2_pct]]% of the variation between months (R² = [[fit_r2]]). Everything else, including dust, heat, shading and power cuts, has to fit in the remaining [[unexpl]]%.
 
+## The bills had the wrong dates
+
+The utility's consumer portal offers daily import and export for the net meter, though not for generation. We downloaded it for every month to see whether it agreed with the bills. Our hunch was that it would, and the only question was how closely.
+
+Summed over the dates printed on each bill, it did not. March was [[rec_mar_printed]]% off, and February nearly as much. Moving the windows by a day or two closed the gap completely. On the corrected dates, every complete billing period matches the bill to within [[rec_max]] kWh, on import and export separately. The meter had been read on different days from the ones the bill prints. The February bill actually covers [[feb_days_true]] days, ending on 2 March, and the March bill covers only [[mar_days]] days, from 3 to 31 March, not 31. From April on, each bill covers one calendar month, a day earlier than printed.
+
+The portal's dates are the ones to trust. Daily export tracks the same day's satellite sunlight much more closely than the day before or after. The generation meter is read on the same visit, and the model fits better on the corrected dates, so we use them throughout. Two things this changed are worth stating now. March, which our first version called a shortfall, is not one: we had divided its output by 31 days instead of 29. And temperature, which earlier looked useless as a predictor, turned out to matter.
+
 ## Choosing what to leave out
 
 A line through nine points is easy to draw and easy to fool yourself with. With so few months, every extra variable is another way to fit noise. So instead of asking which features sounded reasonable, we asked which ones helped predict a month the model had not seen.
@@ -50,9 +58,11 @@ The test is called leave-one-out. Fit the model on all months but one, predict t
 
 {{fig:models}}
 
-Sunlight alone missed by [[mae_sun]]% on average. Adding temperature made it worse, at [[mae_sun_t]]%, and so did adding rain, at [[mae_sun_rain]]%. Rain on its own ([[mae_rain]]%) and temperature on its own ([[mae_temp]]%) were far worse. Rain matters, but its effect is already inside the sunlight number, because rainy days are dull days. Adding it a second time only gives the fit another way to chase noise.
+Sunlight alone missed by [[mae_sun]]% on average. Adding temperature helped, bringing it to [[mae_sun_t]]%. Adding rain made it worse, at [[mae_sun_rain]]%. Rain on its own ([[mae_rain]]%) and temperature on its own ([[mae_temp]]%) were far worse. Rain matters, but its effect is already inside the sunlight number, because rainy days are dull days. Adding it a second time only gives the fit another way to chase noise. Temperature is different: it carries information sunlight does not, because hot cells convert light less efficiently.
 
-We kept two models. The simple sunlight line is the quick one: one input, two fitted numbers. The physics model described below misses by [[mae_phys]]% on average, slightly better than the line. When we first ran this comparison the order was reversed, until NASA revised its July and August data (see below). With nine points, a gap that small is not a ranking. We keep the physics model for two things the line cannot do: judge the panels' health month by month, and forecast winter months the line has never seen.
+On the dates printed on the bills, temperature had looked useless. The two months with the wrong day counts were exactly the ones that hid its effect. That is a small lesson in how one data error can switch a conclusion.
+
+We kept two models. The simple sunlight line is the quick one: one input, two fitted numbers. The physics model described below, which includes heat, misses by [[mae_phys]]% on average, the best of the set. We use it to judge the panels' health month by month and to forecast winter months the line has never seen.
 
 Every analysis is a list of decisions about what to ignore. Here is ours.
 
@@ -61,15 +71,15 @@ Every analysis is a list of decisions about what to ignore. Here is ours.
 | Sunlight on the ground | Kept | Explains [[fit_r2_pct]]% on its own. |
 | Panel angle | Simplified | Fixed at the installed [[tilt]]°, facing south. Used to convert horizontal sunlight into sunlight on the panels. |
 | Direct and diffuse light | Simplified | Split with a standard daily formula, because there is no hourly data. |
-| Panel temperature | Kept, physics model only | The datasheet gives a 0.30% loss per °C, and panels run hotter in strong sun. Monthly data is too coarse to see it clearly, but physics says it is there. |
+| Panel temperature | Kept | The datasheet gives a 0.30% loss per °C, and panels run hotter in strong sun. It improved held-out predictions once the billing dates were corrected. |
 | Rain | Left out | Its effect is already in sunlight. Adding it worsened predictions. |
 | Cloud cover | Left out | Carries the same information as sunlight. |
 | Humidity and wind | Left out | No measurable signal at monthly resolution. |
 | Dust and soiling | Not modelled | Appears in the residuals instead. |
 | Power cuts | Not modelled | No logs. The family estimates about 5 hours a month in daylight. |
 | Ground reflectivity | Fixed at [[albedo]] | Dark concrete. Changed only in the white-paint scenario. |
-| Panel ageing | Ignored for 8 months | About 0.4% a year. Included in the lifetime outlook. |
-| Who is at home | Demand only | The house stood empty for about a week in May and had guests for about a week in October. That changes what the house used, never what the panels made. |
+| Panel ageing | Ignored for 9 months | About 0.4% a year. Included in the lifetime outlook. |
+| Who is at home | Demand only | The house was mostly empty for [[away_days]] days in May and had guests for [[guest_days]] days around the start of October, both dated from the daily data. That changes what the house used, never what the panels made. |
 
 ## Did the line see the future?
 
@@ -77,9 +87,9 @@ The cleanest test of a model is a month that did not exist when it was built. We
 
 {{fig:loo}}
 
-One good result can be luck, so the leave-one-out chart is the fairer picture. A typical month lands within about [[loo_mae]]%. The two worst misses point in opposite directions: February was under-predicted by [[loo_feb]]% and May over-predicted by [[loo_may]]%.
+One good result can be luck, so the leave-one-out chart is the fairer picture. A typical month lands within about [[loo_mae]]%. The misses at either end point in opposite directions: February was under-predicted by [[loo_feb]]% and May over-predicted by [[loo_may]]%.
 
-**Why February was under-predicted.** The line only knows the sunlight that reaches flat ground. The panels are not flat, and they are not at air temperature. In February the sun stays low in the southern sky, so panels tilted [[tilt]]° towards it catch it more squarely: they received [[feb_geo_abs]]% more sunlight than flat ground. In May the sun is almost overhead at noon, and the same tilt costs a little: [[may_geo_abs]]% less. February was also cooler (a mean of [[feb_tmean]] °C against [[may_tmean]] °C in May), so the cells lost [[feb_heat]]% of their output to heat against [[may_heat]]% in May. Put together, each unit of ground-level sunlight was worth about [[feb_vs_may]]% more electricity in February than in May. That is the size of both misses. The chart below follows each month from sunlight to kilowatt-hours and shows where the two months part company.
+**Why February was under-predicted.** The line only knows the sunlight that reaches flat ground. The panels are not flat, and they are not at air temperature. In February the sun stays low in the southern sky, so panels tilted [[tilt]]° towards it catch it more squarely: they received [[feb_geo_abs]]% more sunlight than flat ground. In May the sun is almost overhead at noon, and the same tilt costs a little: [[may_geo_abs]]% less. February was also cooler (a mean of [[feb_tmean]] °C against [[may_tmean]] °C in May), so the cells lost [[feb_heat]]% of their output to heat against [[may_heat]]% in May. Put together, each unit of ground-level sunlight was worth about [[feb_vs_may]]% more electricity in February than in May. That is why the line, which sees only ground sunlight, misses the two months in opposite directions. May's miss is larger than geometry and heat explain, because May is also the one month that genuinely fell short (below). The chart below follows each month from sunlight to kilowatt-hours and shows where the two months part company.
 
 {{fig:chain}}
 
@@ -109,21 +119,21 @@ To judge the panels themselves we needed an estimate of what the weather allowed
 
 Because η is fitted on the same months the model judges, the model can only compare months with one another. It cannot say how good the system is in absolute terms.
 
-## Two months that fell short
+## One month that fell short
 
 {{fig:resid}}
 
-March ([[r_mar]]%) and May ([[r_may]]%) are the only real shortfalls.
+May ([[r_may]]%) is the only clear shortfall. February ([[r_feb]]%) is the next lowest, and part of it is the first day: the panels were switched on during 8 February, but the bill counts it as a full day.
 
-March is the story of a hunch that was wrong. Early on we flagged it as suspicious, reasoning that March in Odisha is usually drier and sunnier than April. The satellite record said otherwise: March 2026 received less sun than April. Most of March's low output was weather, and only the residual in the chart survived once the weather was accounted for.
+March is the story of a hunch that was wrong twice. Early on we flagged it as suspicious, reasoning that March in Odisha is usually drier and sunnier than April. The satellite record said otherwise: March 2026 received less sun than April. That explained most of the gap, and for a while we reported the rest, about 7%, as a real shortfall. The daily data then showed the March bill covered 29 days, not 31. Divided by the right number of days, March comes in at [[r_mar]]%. There was nothing wrong with March.
 
 May had the most sun of any month, the highest mean air temperature and the worst conversion, even after the model's heat correction. Heat beyond what the model captures, and pre-monsoon dust, are the candidates. April and June, which followed 75 and 162 mm of rain, both came in above expectation ([[r_apr]]% and [[r_jun]]%), which fits dust being washed off. But May itself had 59 mm of rain and still fell short, so monthly bills cannot separate the two. The experiment further down tries.
 
-July and August came in [[r_jul]]% and [[r_aug]]% above expectation, within the model's usual scatter. Our first version showed them 7 to 10% high, and we blamed the daily formula that splits direct from diffuse light under heavy cloud. That explanation was wrong. NASA later revised its July sunlight up by about 5% and August by about 9%, and the excess disappeared. The early satellite estimates had under-read the monsoon.
+July and August came in at [[r_jul]]% and [[r_aug]]%, within the model's usual scatter. Our first version showed them 7 to 10% high, and we blamed the daily formula that splits direct from diffuse light under heavy cloud. That explanation was wrong. NASA later revised its July sunlight up by about 5% and August by about 9%, and the excess disappeared. The early satellite estimates had under-read the monsoon.
 
 ## An experiment: dust, heat or sky?
 
-The shortfalls left a question. Was it dust on the glass, heat the model under-counts, or something about clear skies? Each explanation leaves its own fingerprint in the data, so each can be tested.
+Our first look at the residuals, with March and May both short, raised a question. Was it dust on the glass, heat the model under-counts, or something about clear skies? Each explanation leaves its own fingerprint in the data, so each can be tested.
 
 - **Dust.** Dust builds up between rains and washes off in a downpour. For every day we counted the days since the last rain of at least [[dust_mm]] mm, starting from zero on the day the new panels went up, and averaged that over each billing month, giving bright days more weight. Prediction: the longer the dry spell, the lower the residual.
 - **Heat.** If the model's heat correction is too gentle, the hottest months will still fall short. Proxy: the modelled cell temperature. Prediction: hotter cells, lower residual.
@@ -133,23 +143,25 @@ We tested each on the [[exp_n]] months with a rank correlation and an exact perm
 
 {{fig:experiment}}
 
-All three point the same way: dust ρ = [[rho_dust]] (p = [[p_dust]]), heat [[rho_tcell]] (p = [[p_tcell]]), sky [[rho_kt]] (p = [[p_kt]]). Running three tests raises the odds of a lucky hit, so we corrected for it (Holm). Only the sky clears 0.05, and only just, at [[ph_kt]]. Dust and heat sit at [[ph_dust]].
+When we first ran this, on the dates printed on the bills, all three looked strong: dust ρ = [[o_rho_dust]], heat [[o_rho_tcell]], sky [[o_rho_kt]] (p = [[o_p_kt]]). On the corrected dates most of that evidence goes away. Dust is now ρ = [[rho_dust]] (p = [[p_dust]]), heat [[rho_tcell]] (p = [[p_tcell]]) and sky [[rho_kt]] (p = [[p_kt]]). After correcting for running three tests (Holm), none comes close to 0.05. Much of the earlier pattern came from March and February's wrong day counts, which happened to line up with the dry, clear, hot season.
 
-The trouble is that the three travel together. In Bhubaneswar the dry months are also the clear months and the hot months. The dust proxy correlates [[col_dust_kt]] with clearness and [[col_dust_tcell]] with cell temperature. So we asked which one survives when another is held fixed. Holding clearness fixed, the dust correlation shrinks to [[part_dust_sky]]. Holding dust fixed, clearness keeps [[part_sky_dust]]. Heat also keeps [[part_heat_sky]] with clearness held fixed. Dust is the weakest of the three. Heat and sky cannot be told apart with these months.
+The three proxies also travel together. In Bhubaneswar the dry months are the clear months and the hot months. The dust proxy correlates [[col_dust_kt]] with clearness and [[col_dust_tcell]] with cell temperature. Holding clearness fixed, the dust correlation shrinks to [[part_dust_sky]]. Holding dust fixed, clearness keeps [[part_sky_dust]]. With the residuals now small everywhere except May, nine months cannot settle the question.
 
-April and May show the limit. Their cells ran equally hot and their skies were equally clear, yet April came in at [[r_apr]]% and May at [[r_may]]%. None of the three proxies separates them, so part of May's shortfall remains unexplained.
+April and May show the limit. Their cells ran equally hot and their skies were equally clear, yet April came in at [[r_apr]]% and May at [[r_may]]%. None of the three proxies separates them, so May's shortfall remains unexplained.
 
 ### A forecast to settle it
 
-Winter pulls the three apart. From November to February the sky stays clear, the cells run cool and it rarely rains, so the dry spell grows from about [[dust_nov_days]] days to about [[dust_feb_days]]. Feeding the typical winter weather of 2016–2025 into each fit gives three different forecasts.
+Winter pulls the three apart. From November to February the sky stays clear, the cells run cool and it rarely rains, so the dry spell grows from about [[dust_nov_days]] days to about [[dust_feb_days]]. We wrote down a forecast on [[prereg_date]], before any winter bill: below [[o_b_sd]]% in December and January would favour dust, above [[o_b_sh]]% heat, anything between sky, with the model's efficiency frozen at [[o_eta]].
 
-- If **dust** drives the residual, it should sink month by month, from [[pnov_dust]]% in November to about [[pfeb_dust]]% in February. December–January average: [[pdj_dust]]%.
-- If **heat** drives it, cool winter cells should push it up. December–January average: [[pdj_tcell]]%.
-- If **sky** drives it, it should stay flat. December–January average: [[pdj_kt]]%.
+Ten days later the daily data showed those fits were built on the wrong dates. No winter bill had arrived, so we amended the test on [[amend_date]] and kept the original on record. Both will be scored. Feeding the typical winter weather of 2016–2025 into the corrected fits gives these December–January forecasts:
+
+- If **heat** drives the residual, cool winter cells should push it up, to about [[pdj_tcell]]%.
+- If **dust** drives it, about [[pdj_dust]]%.
+- If **sky** drives it, about [[pdj_kt]]%.
 
 {{fig:prereg}}
 
-We wrote this down on [[prereg_date]], before any winter bill. The model's efficiency is frozen at [[eta_frozen]], so new months cannot shift the yardstick. The verdict uses the average of the December and January residuals. Below [[b_sd]]% favours dust, above [[b_sh]]% favours heat, and anything in between favours sky. A fall of five points or more from November to February also counts for dust. Two months carry noise of about ±[[rule_se]] points, so there is roughly a [[miss_sd]]% chance of mistaking sky for dust and a [[miss_sh]]% chance of mistaking it for heat. The dust and heat fits also reach beyond the range they were built on (open circles), which is why the rule rests on the order of the three lines rather than their exact values. The test assumes nobody washes the panels this winter.
+Dust and sky now sit only [[ds_gap]] points apart, inside the noise of two months (about ±[[rule_se]] points), so the amended test cannot tell them apart and does not try. It asks one question: is it heat? The efficiency is frozen at [[eta_frozen_4]], so new months cannot shift the yardstick. If the December–January average is above [[b_heat]]%, the verdict is heat. Below it, heat is ruled out and the cause stays open between dust and sky. A fall of five points or more from November to February still counts for dust on its own, because dust is the only one of the three that builds up month after month. Even this simpler test is weak: there is about a [[miss_oh]]% chance of calling heat when it is not, and a [[miss_ho]]% chance of missing it when it is. We say so now so that the result cannot be oversold later. The test assumes nobody washes the panels this winter.
 
 ## 2026 was not a normal year
 
@@ -181,9 +193,21 @@ Solar used at home was steady, at [[self_min]] to [[self_max]] kWh a month. Dema
 
 {{fig:demand}}
 
-Demand follows the heat. Measured by cooling-degree-days, how far the daily mean temperature sat above 25 °C, the correlation is [[cdd_occ]]. Demand here is counted per occupied day, because the house stood empty for about a week in May, and the family recalls importing roughly 200 fewer units than usual. An absence of [[absent]] days reproduces that figure, so May's demand is spread over its occupied days only.
+Demand follows the heat. Measured by cooling-degree-days, how far the daily mean temperature sat above 25 °C, the monthly correlation is [[cdd_occ]], counting May's demand per occupied day because the house was mostly empty for part of it.
 
-October broke the pattern the other way. It was cooler than [[guest_prev]], yet the house used [[guest_rise]]% more per day ([[guest_prev_dem]] to [[guest_dem]] kWh). We had guests for about a week. Fitted on the other months, heat alone would predict [[guest_heat_dem]] kWh a day for October, which leaves about [[guest_excess]] kWh unexplained. If the guests account for all of it, that is roughly [[guest_per_day]] kWh a day for their week, more than the house normally uses in a day, so the bills cannot say how much belongs to them. With October set aside, the correlation with heat is [[cdd_host]].
+The daily data shows the same thing in much finer detail, and it puts dates on the household events the bills could only blur. The portal has no generation, so we spread each month's metered generation across its days in proportion to the physics model's daily estimate. Daily demand is then import plus the solar used at home.
+
+{{fig:hinge}}
+
+Below a daily mean of about [[hinge_tb]] °C the house uses a steady [[hinge_base]] kWh a day. Above it, each extra degree adds about [[hinge_slope]] kWh, which is the air conditioning. Temperature explains [[hinge_r2_pct]]% of the day-to-day variation (R² = [[hinge_r2]]); the rest is ordinary household life, about ±[[hinge_sd]] kWh a day, with no weekday pattern (the weekday averages differ by at most [[wd_range]] kWh). The threshold confirms the 25 °C base we had assumed for cooling-degree-days.
+
+Measured against that line, the events have sizes:
+
+- **The house mostly empty, 16–23 May.** Demand averaged [[away_dem]] kWh a day against [[away_pred]] expected for those hot days, [[away_kwh]] kWh less over the [[away_days]] days. Import never fell below [[away_imp_min]] kWh a day, so the house was not fully empty, which matches the family's description of it as mostly empty that week.
+- **Guests, 30 September to 8 October.** About [[guest_kwh]] kWh more than the weather predicts, roughly [[guest_daily]] kWh a day. The visit straddled two bills, which is why monthly data could only blur it. October's other days also ran about [[oct_rest]] kWh a day [[oct_rest_dir]] the line, so the guests explain only part of October's rise.
+- **10–11 July.** A two-day drop of about [[dip_kwh]] kWh that nobody has explained yet.
+
+Daily data can also catch long power cuts: a sunny day with almost no export and lower import. Only [[outage_days]] looks like one. The shorter cuts the family remembers, two or three hours every other week, are too small to stand out in daily totals.
 
 {{fig:money}}
 
@@ -236,11 +260,11 @@ Two slow losses compound. The panels age: the datasheet warrants at least 99% of
 
 ## How we worked
 
-- **Data.** Nine TPCODL bills, [[first]] to [[last]], reconciled against cumulative meter readings. NASA POWER daily weather for the billed days, ten years of daily history (2016 to 2025), and the monthly and annual record back to 1984 {{ref:nasa_power}}.
+- **Data.** Nine TPCODL bills, [[first]] to [[last]], reconciled against cumulative meter readings and against [[n_daily]] days of daily import and export from the TPCODL portal, which corrected the bills' printed reading dates. NASA POWER daily weather for the billed days, ten years of daily history (2016 to 2025), and the monthly and annual record back to 1984 {{ref:nasa_power}}.
 - **Model one, for forecasting.** Generation per day = a × sunlight + b, fitted by least squares on the nine months.
 - **Model two, for diagnosis and the typical-year forecast.** Sunlight on the panels × heat derate × kWp × η, with η the only fitted number.
-- **Validation.** Two genuine out-of-sample months (September, then October against a published forecast) and leave-one-out across all nine. A pre-registered winter test of three explanations for the residuals, scored against a frozen model.
-- **Assumptions.** Panels fixed at [[tilt]]° facing south. Ground reflectivity [[albedo]]. Cell temperature from a NOCT of [[noct]] °C. Tariff slabs of ₹2.90, 4.70, 5.70 and 6.10 per unit plus 4% duty. The house empty for [[absent]] days in May and guests for about a week in October (demand only). White-surface gain of [[white_light_pct]]% from the datasheet's rear-gain table.
-- **Limits.** Nine monthly points. An efficiency fitted on the same months it judges. Satellite estimates for a grid cell rather than a sensor on the roof. No inverter-level data.
+- **Validation.** Two genuine out-of-sample months (September, then October against a published forecast) and leave-one-out across all nine. A pre-registered winter test of three explanations for the residuals, amended once before any winter data (and the original kept), scored against a frozen model.
+- **Assumptions.** Panels fixed at [[tilt]]° facing south. Ground reflectivity [[albedo]]. Cell temperature from a NOCT of [[noct]] °C. Tariff slabs of ₹2.90, 4.70, 5.70 and 6.10 per unit plus 4% duty. The house mostly empty for [[away_days]] days in May and guests for [[guest_days]] days in September–October, dated from the daily data (demand only). White-surface gain of [[white_light_pct]]% from the datasheet's rear-gain table.
+- **Limits.** Nine monthly points for generation; daily data covers only import and export. An efficiency fitted on the same months it judges. Satellite estimates for a grid cell rather than a sensor on the roof. No inverter-level data.
 
 Every number and chart in this piece is regenerated from the project's data with a single command.

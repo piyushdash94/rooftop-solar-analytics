@@ -75,6 +75,34 @@ def occupied_days(bills: pd.DataFrame, occupancy: pd.DataFrame | None = None) ->
     return (bills["days"] - gone).rename("occupied_days")
 
 
+def load_daily_meter(path: Path | str | None = None) -> pd.DataFrame:
+    """Daily import and export from the TPCODL consumer portal (net meter only, no generation).
+
+    Downloaded as one spreadsheet per month and combined. Dates are the portal's calendar
+    days; they line up with same-day satellite sunlight, which is how the bills' printed
+    reading dates were found to be off (see `reconcile_daily`).
+    """
+    path = Path(path) if path else DATA_DIR / "daily_meter.csv"
+    return pd.read_csv(path, parse_dates=["date"], index_col="date")
+
+
+def reconcile_daily(bills: pd.DataFrame, daily: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Sum the daily portal data over each billing period and compare with the bill.
+
+    With the corrected periods in bills.csv every complete period matches to a few
+    hundredths of a kWh on both registers. With the dates printed on the bills
+    (`printed_start`, `printed_end`) February and March miss by 5-9%.
+    """
+    daily = load_daily_meter() if daily is None else daily
+    rows = []
+    for b in bills.itertuples():
+        d = daily.loc[b.period_start:b.period_end]
+        rows.append({"period_start": b.period_start, "days": b.days, "portal_days": len(d),
+                     "import_diff": float(d.import_kwh.sum() - b.import_kwh),
+                     "export_diff": float(d.export_kwh.sum() - b.export_kwh)})
+    return pd.DataFrame(rows)
+
+
 def derive_from_meters(readings: pd.DataFrame) -> pd.DataFrame:
     """Recompute per-period consumption from cumulative meter deltas.
 

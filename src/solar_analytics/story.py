@@ -22,19 +22,32 @@ import numpy as np
 import pandas as pd
 
 from .config import DATA_DIR, RAW_DIR, SITE, Tariff
-from .loaders import load_bills, load_occupancy, occupied_days
+from .loaders import load_bills, load_daily_meter, load_occupancy, occupied_days, reconcile_daily
 from .physics import effective_irradiation, load_daily, period_rollup
 
 KWP = SITE.kwp
 CDD_BASE = 25.0                 # degC, cooling-degree-day base on daily mean air temperature
 WHITE_GAIN = 0.12               # modelled bifacial rear gain from a white roof (datasheet-based)
 # Pre-registered experiment (published 2026-11-08, before the winter bills): dust, heat or sky?
+# AMENDED 2026-11-18, still before any winter bill: daily portal data showed the bills' printed
+# reading dates were wrong (March covered 29 days, not 31), so the discovery set was recomputed
+# on the corrected periods. The original rule is kept verbatim below and scored as well.
 PREREG_DATE = "2026-11-08"
-ETA_FROZEN = 0.9132              # η at registration; winter residuals are scored against this, not a refit
+AMEND_DATE = "2026-11-18"
+ETA_FROZEN = 0.9186              # η at amendment; winter residuals are scored against this, not a refit
+PREREG_ORIGINAL = {              # as registered on 2026-11-08 (old periods); never recomputed
+    "eta": 0.9132, "pdj_dust": -7.2, "pdj_kt": -2.2, "pdj_tcell": 5.0,
+    "dust_below": -4.7, "heat_above": 1.4, "rho": {"dust": -0.63, "tcell": -0.66, "kt": -0.73},
+    "p": {"dust": 0.039, "tcell": 0.029, "kt": 0.016},
+}
 EXP_N = 9                        # the discovery set: Feb-Oct 2026. Hypothesis tests never use later months.
 DUST_RAIN_MM = 5.0               # a day with this much rain resets the dust clock (primary choice)
 WINTER = [11, 12, 1, 2]          # the test season
 GUEST_MONTH = "Oct"             # owner: guests stayed about a week in October (demand only)
+# Household events located in the daily portal data (owner-confirmed where noted). Demand only.
+EVENTS = {"away": ("2026-05-16", "2026-05-23"),      # owner: house mostly empty
+          "guests": ("2026-09-30", "2026-10-08"),    # owner: guests for about a week
+          "dip": ("2026-07-10", "2026-07-11")}       # unexplained two-day drop
 PUBLISHED_OCT_FORECAST = 388.8  # kWh, typical-October forecast published 2026-10-06, before the bill
 SURROUND_COOL = 1.3             # degC, module cooling over a cool-roof coating, measured on monofacial panels
                                 # (Mahmood et al. 2023); used only as the other bound of the white-roof heat effect
@@ -102,6 +115,59 @@ def _dust_clock(rain: pd.Series, start_clean: bool) -> pd.Series:
     return pd.Series(out, rain.index)
 
 
+def _daily_demand(w26: pd.DataFrame, bills: pd.DataFrame) -> dict:
+    """Daily household demand from the portal's import/export plus modelled generation.
+
+    The portal has no generation, so each billing period's metered generation is spread over
+    its days in proportion to the physics model's daily energy. Demand = import + generation
+    - export. A hinge model then asks at what daily mean temperature cooling starts.
+    """
+    dm = load_daily_meter()
+    w = w26.copy()
+    w.index = w.index.tz_localize(None).normalize() if w.index.tz is not None else w.index.normalize()
+    d = dm.join(w[["e_eff", "T2M", "ALLSKY_SFC_SW_DWN"]], how="left")
+    d["gen"] = np.nan
+    for b in bills.itertuples():
+        ee = w.loc[b.period_start:b.period_end, "e_eff"]
+        m = (d.index >= b.period_start) & (d.index <= b.period_end)
+        d.loc[m, "gen"] = b.generation_kwh * d.loc[m, "e_eff"] / ee.sum()
+    d["self"] = (d.gen - d.export_kwh).clip(lower=0)
+    d["demand"] = d.import_kwh + d.self
+    d = d[d.index > bills.period_start.iloc[0] + pd.Timedelta(days=1)].dropna(subset=["demand", "T2M"])
+    d["event"] = ""
+    for k, (a, b) in EVENTS.items():
+        d.loc[a:b, "event"] = k
+    n = d[d.event == ""]
+    best = None
+    for tb in np.arange(22.0, 32.0, 0.25):
+        X = np.c_[np.ones(len(n)), np.maximum(0, n.T2M - tb)]
+        c, res, *_ = np.linalg.lstsq(X, n.demand, rcond=None)
+        r2 = 1 - res[0] / ((n.demand - n.demand.mean()) ** 2).sum()
+        if best is None or r2 > best[0]:
+            best = (float(r2), float(tb), c)
+    r2, tb, c = best
+    d["pred"] = c[0] + c[1] * np.maximum(0, d.T2M - tb)
+    d["res"] = d.demand - d.pred
+    n = d[d.event == ""]
+    ev = {}
+    for k in EVENTS:
+        s = d[d.event == k]
+        ev[k] = {"days": len(s), "start": str(s.index.min().date()), "end": str(s.index.max().date()),
+                 "dem": float(s.demand.mean()), "pred": float(s.pred.mean()), "total": float(s.res.sum()),
+                 "imp_min": float(s.import_kwh.min()), "exp": float(s.export_kwh.mean())}
+    rest = n[(n.index >= "2026-10-01")]
+    sunny = d[d.ALLSKY_SFC_SW_DWN >= 4.5]
+    share = sunny.export_kwh / sunny.gen
+    cut = sunny[(share < 0.05) & (sunny.import_kwh < sunny.import_kwh.median())]
+    wd = n.groupby(n.index.dayofweek).res.mean()
+    return {"base": float(c[0]), "slope": float(c[1]), "tb": tb, "r2": r2, "sd": float(n.res.std()),
+            "n": int(len(n)), "events": ev, "oct_rest": float(rest.res.mean()),
+            "outage_days": [str(i.date()) for i in cut.index], "wd_range": float(wd.max() - wd.min()),
+            "imp_p5": float(n.import_kwh.quantile(0.05)),
+            "points": [{"d": i.strftime("%Y-%m-%d"), "t": _r(r.T2M, 2), "y": _r(r.demand, 2), "e": r.event}
+                       for i, r in d.iterrows()]}
+
+
 def _experiment(w26: pd.DataFrame, hist: pd.DataFrame, monthly: list[dict], roll: pd.DataFrame) -> dict:
     """Dust, heat or sky: three explanations for the residual pattern, tested on the nine discovery
     months and turned into a written-down forecast for the winter bills."""
@@ -119,8 +185,9 @@ def _experiment(w26: pd.DataFrame, hist: pd.DataFrame, monthly: list[dict], roll
         d = w.loc[m["start"]:m["end"]]
         r = roll.iloc[i]
         frozen = r.actual_kwh / (r.e_eff_total * KWP * ETA_FROZEN) - 1
+        frozen0 = r.actual_kwh / (r.e_eff_total * KWP * PREREG_ORIGINAL["eta"]) - 1
         rows.append({"month": m["month"], "start": m["start"], "resid": m["resid"],
-                     "frozen": _r(frozen * 100, 1),
+                     "frozen": _r(frozen * 100, 1), "frozen_original": _r(frozen0 * 100, 1),
                      "dust": _r(wmean(d, "dust"), 1), "tcell": _r(wmean(d, "t_cell"), 1),
                      "kt": _r(wmean(d, "kt"), 3)})
     disc = pd.DataFrame(rows[:EXP_N])
@@ -490,6 +557,32 @@ def compute() -> dict:
             "may_charge": f0(may.charge), "may_cf_charge_t": f0(may.charge + may.cf_charge),
         })
 
+    # ---------------------------------------------------------------- daily portal data
+    DD = _daily_demand(w26, bills)
+    rec = reconcile_daily(bills)
+    full = rec[(rec.portal_days == rec.days)]
+    pb = load_bills().copy()
+    pb["period_start"], pb["period_end"] = pd.to_datetime(pb.printed_start), pd.to_datetime(pb.printed_end)
+    prec = reconcile_daily(pb)
+    E = DD["events"]
+    facts.update({
+        "rec_max": f"{max(full.import_diff.abs().max(), full.export_diff.abs().max()):.2f}",
+        "rec_mar_printed": f"{abs(prec.import_diff.iloc[1] / bills.import_kwh.iloc[1] * 100):.0f}",
+        "mar_days": str(int(bills.days.iloc[1])), "feb_days_true": str(int(bills.days.iloc[0])),
+        "days_min": str(int(bills.days.min())), "days_max": str(int(bills.days.max())),
+        "n_daily": str(len(load_daily_meter())),
+        "hinge_base": f"{DD['base']:.0f}", "hinge_slope": f"{DD['slope']:.1f}", "hinge_tb": f"{DD['tb']:.1f}",
+        "hinge_r2": f"{DD['r2']:.2f}", "hinge_r2_pct": f"{DD['r2'] * 100:.0f}", "hinge_sd": f"{DD['sd']:.0f}", "wd_range": f"{DD['wd_range']:.1f}",
+        "imp_p5": f"{DD['imp_p5']:.0f}",
+        "away_days": str(E["away"]["days"]), "away_kwh": f0(-E["away"]["total"]),
+        "away_dem": f"{E['away']['dem']:.0f}", "away_pred": f"{E['away']['pred']:.0f}",
+        "away_imp_min": f"{E['away']['imp_min']:.1f}",
+        "guest_days": str(E["guests"]["days"]), "guest_kwh": f0(E["guests"]["total"]),
+        "guest_daily": f"{E['guests']['total'] / E['guests']['days']:.0f}",
+        "dip_kwh": f0(-E["dip"]["total"]), "oct_rest": f"{abs(DD['oct_rest']):.1f}", "oct_rest_dir": "above" if DD["oct_rest"] > 0 else "below",
+        "outage_days": ", ".join(pd.Timestamp(x).strftime("%-d %B") for x in DD["outage_days"]) or "none",
+    })
+
     # ---------------------------------------------------------------- the dust / heat / sky experiment
     X = _experiment(w26, hist, monthly, roll)
     T, P = X["tests"], X["pred"]
@@ -500,15 +593,45 @@ def compute() -> dict:
     def pdj(k):
         return float(np.mean([p[k] for p in P if p["label"] in ("Dec", "Jan")]))
     from scipy.stats import norm
-    b_sd = (pdj("dust") + pdj("kt")) / 2          # verdict boundaries on the Dec-Jan mean residual
-    b_sh = (pdj("kt") + pdj("tcell")) / 2
+    # Amended rule. On the corrected periods the dust and sky forecasts sit within noise of each
+    # other, so the test can only separate heat from not-heat. One boundary, halfway between the
+    # heat forecast and the higher of the other two.
     se2 = X["sd"] / np.sqrt(2)                     # rough noise on a two-month mean
-    X["rule"] = {"dust_below": b_sd, "heat_above": b_sh, "se": se2,
-                 "miss_sky_dust": float(norm.cdf((b_sd - pdj("kt")) / se2)),
-                 "miss_sky_heat": float(norm.sf((b_sh - pdj("kt")) / se2))}
+    other = max(pdj("dust"), pdj("kt"))
+    b_heat = (other + pdj("tcell")) / 2
+    X["rule"] = {"heat_above": b_heat, "se": se2, "other": other,
+                 "miss_other_heat": float(norm.sf((b_heat - other) / se2)),
+                 "miss_heat_other": float(norm.cdf((b_heat - pdj("tcell")) / se2)),
+                 "dust_sky_gap": abs(pdj("dust") - pdj("kt"))}
+    X["original"] = PREREG_ORIGINAL
+
+    def verdict(mean, fall, below, above):
+        if fall is not None and fall >= 5:
+            return "dust"
+        return "dust" if below is not None and mean < below else "heat" if mean > above else "sky"
+    dj = [o for o in X["outcome"] if pd.Timestamp(o["start"]).month in (12, 1)]
+    if len(dj) == 2:
+        nov = [o for o in X["outcome"] if pd.Timestamp(o["start"]).month == 11]
+        feb = [o for o in X["outcome"] if pd.Timestamp(o["start"]).month == 2]
+        def fall(k):
+            return nov[0][k] - feb[0][k] if nov and feb else None
+        m_new = float(np.mean([o["frozen"] for o in dj]))
+        m_old = float(np.mean([o["frozen_original"] for o in dj]))
+        X["verdict"] = {
+            "amended": "heat" if m_new > b_heat else ("dust" if (fall("frozen") or 0) >= 5 else "not heat"),
+            "original": verdict(m_old, fall("frozen_original"), PREREG_ORIGINAL["dust_below"],
+                                PREREG_ORIGINAL["heat_above"]),
+            "mean_amended": m_new, "mean_original": m_old}
+    po = PREREG_ORIGINAL
     facts.update({
-        "b_sd": sg(b_sd, 1), "b_sh": sg(b_sh, 1), "rule_se": f"{se2:.1f}",
-        "miss_sd": f"{X['rule']['miss_sky_dust'] * 100:.0f}", "miss_sh": f"{X['rule']['miss_sky_heat'] * 100:.0f}",
+        "b_heat": sg(b_heat, 1), "rule_se": f"{se2:.1f}", "pdj_other": sg(other, 1),
+        "miss_oh": f"{X['rule']['miss_other_heat'] * 100:.0f}", "miss_ho": f"{X['rule']['miss_heat_other'] * 100:.0f}",
+        "ds_gap": f"{X['rule']['dust_sky_gap']:.1f}",
+        "o_eta": f"{po['eta']:.4f}", "o_b_sd": sg(po["dust_below"], 1), "o_b_sh": sg(po["heat_above"], 1),
+        "o_pdj_dust": sg(po["pdj_dust"], 1), "o_pdj_kt": sg(po["pdj_kt"], 1), "o_pdj_tcell": sg(po["pdj_tcell"], 1),
+        "o_rho_dust": sg(po["rho"]["dust"]), "o_rho_tcell": sg(po["rho"]["tcell"]), "o_rho_kt": sg(po["rho"]["kt"]),
+        "o_p_kt": f"{po['p']['kt']:.3f}",
+        "amend_date": "18 November 2026", "eta_frozen_4": f"{ETA_FROZEN:.4f}",
         "prereg_date": "8 November 2026", "eta_frozen": f"{ETA_FROZEN:.3f}", "exp_n": str(EXP_N),
         "dust_mm": f"{DUST_RAIN_MM:.0f}", "exp_sd": f"{X['sd']:.1f}",
         **{f"rho_{k}": sg(T[k]["rho"]) for k in T},
@@ -527,7 +650,7 @@ def compute() -> dict:
 
     return {
         "experiment": X,
-        "monthly": monthly, "daily": daily, "models": models,
+        "monthly": monthly, "daily": daily, "models": models, "daily_demand": DD,
         "fit": {"a": a, "c": c, "r2": r2, "sd": sd, "a7": a7, "c7": c7, "sep_pred": sep_pred,
                 "loo": [_r(v, 1) for v in loo_sun]},
         "forecast": fc, "backtest": [{"year": int(k), "kwh": _r(v, 0)} for k, v in annual.items()],
