@@ -150,3 +150,21 @@ def test_dust_is_weakest_once_sky_is_held_fixed(B):
     p = B["experiment"]["partial"]
     assert abs(p["dust_given_sky"]) < abs(p["sky_given_dust"])
     assert all(t["rho"] < 0 for t in B["experiment"]["tests"].values())
+
+
+def test_daily_export_corroborates_the_daily_generation_model(B):
+    """The model's day-by-day generation explains export swings that an even split cannot,
+    and almost never implies exporting more than the panels made."""
+    c = B["daily_split"]
+    assert c["physics"]["r2"] > 0.35 and c["flat"]["r2"] < 0.05
+    assert c["physics"]["viol"] <= 2
+    assert 0.3 < c["physics"]["beta"] < 1.0   # attenuated, as the article says
+
+
+def test_daytime_air_temperature_changes_no_conclusion(B):
+    """The heat derate uses the 24-hour mean air temperature. Daytime air makes losses larger,
+    but no residual moves more than two points and May stays the only clear shortfall."""
+    t = B["daytime_air"]
+    assert t["loss_day"][4] > t["loss_now"][4]
+    assert t["shift_max"] < 2.0
+    assert t["may_day"] < -8

@@ -168,6 +168,79 @@ def _daily_demand(w26: pd.DataFrame, bills: pd.DataFrame) -> dict:
                        for i, r in d.iterrows()]}
 
 
+def _daytime_air_check(w26: pd.DataFrame, bills: pd.DataFrame) -> dict:
+    """How much does it matter that the heat derate uses the 24-hour mean air temperature?
+
+    Re-runs the derate with sunlight-weighted daytime air temperature from NASA's hourly data
+    (data/raw/nasa_power_daytemp_2026.csv) and reports the shift. A sensitivity check only:
+    the published model keeps the daily mean, and the article says so.
+    """
+    P_NOCT, P_TC = SITE.module.noct, SITE.module.temp_coeff_pmax
+    dt = pd.read_csv(RAW_DIR / "nasa_power_daytemp_2026.csv", parse_dates=["date"], index_col="date")
+    both = dt.dropna()
+    t_day = dt.t_sun.fillna(dt.t_cs + float((both.t_sun - both.t_cs).mean()))
+    w = w26.copy()
+    w.index = w.index.tz_localize(None).normalize() if w.index.tz is not None else w.index.normalize()
+    w["t_day"] = t_day.reindex(w.index)
+    w["f_day"] = 1 + P_TC * (w.t_day + (P_NOCT - 20) / 800 * w.g_w - 25)
+    w["e_day"] = w.poa * w.f_day
+    e_now, e_day = [], []
+    for b in bills.itertuples():
+        s = w.loc[b.period_start:b.period_end]
+        e_now.append(s.e_eff.sum())
+        e_day.append(s.e_day.sum())
+    g = bills.generation_kwh.values
+    r_now = g / (np.array(e_now) * KWP)
+    r_day = g / (np.array(e_day) * KWP)
+    res_now = r_now / np.median(r_now) - 1
+    res_day = r_day / np.median(r_day) - 1
+    m = w.index.month
+    gap = (w.t_day - w.T2M).groupby(m).mean()
+    loss = lambda f: (1 - (w.poa * f).groupby(m).sum() / w.poa.groupby(m).sum()) * 100  # noqa: E731
+    l_now, l_day = loss(w.f_temp), loss(w.f_day)
+    return {"gap": {int(k): float(v) for k, v in gap.items()},
+            "loss_now": {int(k): float(v) for k, v in l_now.items()},
+            "loss_day": {int(k): float(v) for k, v in l_day.items()},
+            "shift_max": float(np.max(np.abs(res_day - res_now)) * 100),
+            "may_day": float(res_day[3] * 100), "eta_day": float(np.median(r_day))}
+
+
+def _daily_split_check(w26: pd.DataFrame, bills: pd.DataFrame) -> dict:
+    """Does the model's day-by-day generation agree with the portal's daily export?
+
+    Export = generation - solar used at home. Within each month, regress daily export on the
+    modelled daily generation (plus a cooling term for daytime use), and compare ways of
+    splitting a month's metered generation across its days. Also count physically impossible
+    days, where export would exceed the modelled generation.
+    """
+    dm = load_daily_meter()
+    w = w26.copy()
+    w.index = w.index.tz_localize(None).normalize() if w.index.tz is not None else w.index.normalize()
+    w["flat"] = 1.0
+    d = dm.join(w[["e_eff", "ALLSKY_SFC_SW_DWN", "flat", "T2M"]])
+    d["period"] = -1
+    for i, b in enumerate(bills.itertuples()):
+        d.loc[b.period_start:b.period_end, "period"] = i
+    d = d[(d.index > bills.period_start.iloc[0] + pd.Timedelta(days=1)) & (d.period >= 0)].dropna()
+    out = {}
+    for key, col in (("physics", "e_eff"), ("ghi", "ALLSKY_SFC_SW_DWN"), ("flat", "flat")):
+        g = pd.Series(index=d.index, dtype=float)
+        for i, b in enumerate(bills.itertuples()):
+            m = d.period == i
+            g[m] = b.generation_kwh * d.loc[m, col] / w.loc[b.period_start:b.period_end, col].sum()
+        X = pd.get_dummies(d.period, prefix="m").astype(float)
+        X["gen"] = g
+        X["hot"] = np.maximum(0, d.T2M - 25.5)
+        c, *_ = np.linalg.lstsq(X.values, d.export_kwh.values, rcond=None)
+        resid = d.export_kwh - X.values @ c
+        within = d.export_kwh - d.export_kwh.groupby(d.period).transform("mean")
+        out[key] = {"r2": float(1 - (resid ** 2).sum() / (within ** 2).sum()),
+                    "beta": float(c[list(X.columns).index("gen")]),
+                    "viol": int((d.export_kwh > g + 0.05).sum())}
+    out["n"] = int(len(d))
+    return out
+
+
 def _experiment(w26: pd.DataFrame, hist: pd.DataFrame, monthly: list[dict], roll: pd.DataFrame) -> dict:
     """Dust, heat or sky: three explanations for the residual pattern, tested on the nine discovery
     months and turned into a written-down forecast for the winter bills."""
@@ -565,7 +638,19 @@ def compute() -> dict:
     pb["period_start"], pb["period_end"] = pd.to_datetime(pb.printed_start), pd.to_datetime(pb.printed_end)
     prec = reconcile_daily(pb)
     E = DD["events"]
+    TA = _daytime_air_check(w26, bills)
+    SC = _daily_split_check(w26, bills)
+    dry = [TA["gap"][k] for k in (2, 3, 4)]
+    wet = [TA["gap"][k] for k in (7, 8, 9)]
     facts.update({
+        "ta_gap_dry_lo": f"{min(dry):.0f}", "ta_gap_dry_hi": f"{max(dry):.0f}", "ta_gap_may": f"{TA['gap'][5]:.0f}",
+        "ta_gap_wet": f"{np.mean(wet):.0f}",
+        "ta_loss_apr_now": f"{TA['loss_now'][4]:.1f}", "ta_loss_apr_day": f"{TA['loss_day'][4]:.1f}",
+        "ta_loss_jul_now": f"{TA['loss_now'][7]:.1f}", "ta_loss_jul_day": f"{TA['loss_day'][7]:.1f}",
+        "ta_shift_max": f"{TA['shift_max']:.1f}", "ta_may_day": f"{TA['may_day']:.1f}".replace("-", "−"),
+        "sc_r2": f"{SC['physics']['r2'] * 100:.0f}", "sc_r2_ghi": f"{SC['ghi']['r2'] * 100:.0f}",
+        "sc_r2_flat": f"{max(SC['flat']['r2'], 0) * 100:.0f}", "sc_beta": f"{SC['physics']['beta']:.2f}",
+        "sc_viol": str(SC["physics"]["viol"]), "sc_n": str(SC["n"]),
         "rec_max": f"{max(full.import_diff.abs().max(), full.export_diff.abs().max()):.2f}",
         "rec_mar_printed": f"{abs(prec.import_diff.iloc[1] / bills.import_kwh.iloc[1] * 100):.0f}",
         "mar_days": str(int(bills.days.iloc[1])), "feb_days_true": str(int(bills.days.iloc[0])),
@@ -651,6 +736,7 @@ def compute() -> dict:
     return {
         "experiment": X,
         "monthly": monthly, "daily": daily, "models": models, "daily_demand": DD,
+        "daytime_air": TA, "daily_split": SC,
         "fit": {"a": a, "c": c, "r2": r2, "sd": sd, "a7": a7, "c7": c7, "sep_pred": sep_pred,
                 "loo": [_r(v, 1) for v in loo_sun]},
         "forecast": fc, "backtest": [{"year": int(k), "kwh": _r(v, 0)} for k, v in annual.items()],

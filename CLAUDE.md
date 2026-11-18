@@ -28,7 +28,7 @@ article/article.md             the prose. [[fact]] placeholders, {{fig:id}} / {{
 scripts/build_article.py       renders site/index.html, article/blog.md, article/figures/*.png,
                                article/rooftop-solar-article.pdf and FINDINGS.md
 app/streamlit_app.py           interactive companion; same story + figures, plus what-if sliders
-tests/                         42 tests; test_story.py / test_cities.py pin each document's conclusions
+tests/                         44 tests; test_story.py / test_cities.py pin each document's conclusions
 research/cities.md             second document: same array in 12 cities (cities.py, CITY_FIGURES);
                                built by build_article.py into site/cities/ and research/
 ```
@@ -103,6 +103,16 @@ comparison (`story.compute()["models"]`).
   warming is a MODEL result: no cited source measures bifacial cells over dark vs white roof.
   Never write "field tests show the panels run warmer".
 - Demand rose ~75% per day Feb→Jun (20→35 kWh/day). Bills rose because of demand.
+- Temperature input is NASA's 24-h MEAN AIR temperature (not panel, not daytime). NOCT converts
+  air to cell. Sun-weighted daytime air (`raw/nasa_power_daytemp_2026.csv`, from hourly data via
+  `weather.py --daytime`) is ~6 °C above the mean Feb–Apr, 5 May, 2 monsoon; heat loss Apr
+  7.0→8.8%. Sensitivity only (`daytime_air`): residuals move ≤0.9 pt, May −8.5%. Model keeps the
+  24-h mean to match the ten-year files; the article admits heat losses read low. Don't swap the
+  model input without also redoing 2016–2025 and amending the pre-registration.
+- Daily corroboration (`daily_split`): within-month, modelled daily gen explains 44% of export
+  swings (even split 0%, GHI 43%); only 1/262 days export > modelled gen; slope 0.54 (attenuation
+  from single-day satellite error and/or sunny-day self-use, inseparable). Daily data cannot
+  referee physics vs GHI (differences are seasonal).
 - Daily demand (portal import + modelled solar used at home): flat 19 kWh/day until daily mean
   ~25.5 °C, then +2.2 kWh/°C (hinge, R² 0.42, sd ±6, no weekday effect). Confirms CDD base 25.
 - May: house "kinda empty" (owner) 16–23 May (8 days, EVENTS["away"]); 156 kWh below the hinge

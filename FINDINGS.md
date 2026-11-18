@@ -58,6 +58,14 @@ Summed over the dates printed on each bill, it did not. March was 7% off, and Fe
 
 The portal's dates are the ones to trust. Daily export tracks the same day's satellite sunlight much more closely than the day before or after. The generation meter is read on the same visit, and the model fits better on the corrected dates, so we use them throughout. Two things this changed are worth stating now. March, which our first version called a shortfall, is not one: we had divided its output by 31 days instead of 29. And temperature, which earlier looked useless as a predictor, turned out to matter.
 
+## What the daily data can and cannot check
+
+The portal gives daily import and export but not daily generation. Export is what the panels made minus what the house used while the sun was up. If our model's day-by-day estimate of generation is right, daily export should rise and fall with it.
+
+It does. Within each month, the model's daily generation explains 44% of the day-to-day swings in export, after allowing for the extra daytime use on hot days. Spreading each month's generation evenly over its days explains 0%. On only 1 of 262 days does the house export more than the model says the panels made, which would be impossible; that was a dark, rainy day, and by less than a kilowatt-hour. The satellite's day-by-day sunlight carries real information about this roof.
+
+Two limits. Each extra kilowatt-hour of modelled generation shows up as only 0.54 kWh of extra export. Part of that is error in single-day satellite estimates, which always shrinks a fitted slope. Part may be the house using more solar directly on sunny days. Daily totals cannot separate the two. And daily data cannot referee between our models: ground sunlight alone explains 43% of the same swings. The physics model's advantages, panel angle and heat, are seasonal, and comparing days within a month removes the season. The monthly comparison below is where the models differ.
+
 ## Choosing what to leave out
 
 A line through nine points is easy to draw and easy to fool yourself with. With so few months, every extra variable is another way to fit noise. So instead of asking which features sounded reasonable, we asked which ones helped predict a month the model had not seen.
@@ -117,12 +125,14 @@ To judge the panels themselves we needed an estimate of what the weather allowed
 
 **Step 2: heat.** These modules lose 0.30% of their output for every degree their cells run above 25 °C [6]. Cell temperature is estimated with the datasheet's nominal operating cell temperature (NOCT) of 43 °C, the temperature the cells reach under 800 W/m² of sunlight with the air at 20 °C [6, 4]. Cells warm above the air in proportion to the sunlight on them, so the panels run hot in clear spring weather and stay near air temperature under monsoon cloud.
 
+The temperature we feed in is the air's, not the panels', and it is NASA's 24-hour average, nights included. Nobody measured the panels. The NOCT step converts air temperature to cell temperature, but it starts from a number that is too low for the hours that matter: panels only work in daylight, when the air is warmer than the daily average. NASA's hourly data, weighted by sunlight, puts daytime air about 6 °C above the 24-hour mean in February to April, 5 °C in May and about 2 °C in the monsoon. So the model runs the cells too cool, most of all in the dry months. With daytime air instead, April's heat loss would be 8.8% rather than 7.0%, and July's 4.5% rather than 3.9%. We checked whether that changes any conclusion. It barely does, because the fitted efficiency below absorbs the average bias: no month's residual moves by more than 0.9 points, and May goes from −8.9% to −8.5%, still the only clear shortfall. We kept the daily average so the model matches the ten-year weather files it is run on, and we read the heat-loss percentages in this article as somewhat low. The datasheet's NOCT also assumes a 1 m/s breeze and an open rack. Windier days would cool the panels and a low roof mount would warm them, and without a temperature sensor on the panels we cannot say which wins.
+
 **Step 3: one fitted number.** One kilowatt-hour of sunlight per square metre on the panels would give about one kilowatt-hour per kilowatt-peak at test conditions. Real systems lose some of that in the inverter, the wiring, light reflected off the glass, and dust. We let the data set that single factor, η, as the median of the nine months' metered generation divided by the energy the first two steps predicted. It comes out at 0.919.
 
 | Input | Value | Where it comes from |
 |---|---|---|
 | Daily sunlight on the ground | kWh/m² per day | NASA POWER [1] |
-| Daily mean air temperature | °C | NASA POWER, MERRA-2 [1] |
+| Air temperature, 24-hour mean (not panel temperature) | °C | NASA POWER, MERRA-2 [1] |
 | Site location | 20.312° N, 85.868° E | The roof's coordinates |
 | Panel tilt and direction | 12°, facing south | The installed angle, taken as fixed |
 | Ground reflectivity | 0.12 | Assumed for dark, often damp concrete |
@@ -315,7 +325,7 @@ Two slow losses compound. The panels age: the datasheet warrants at least 99% of
 - **Model two, for diagnosis and the typical-year forecast.** Sunlight on the panels × heat derate × kWp × η, with η the only fitted number.
 - **Validation.** Two genuine out-of-sample months (September, then October against a published forecast) and leave-one-out across all nine. A pre-registered winter test of three explanations for the residuals, amended once before any winter data (and the original kept), scored against a frozen model.
 - **Assumptions.** Panels fixed at 12° facing south. Ground reflectivity 0.12. Cell temperature from a NOCT of 43 °C. Tariff slabs of ₹2.90, 4.70, 5.70 and 6.10 per unit plus 4% duty. The house mostly empty for 8 days in May and guests for 9 days in September–October, dated from the daily data (demand only). White-surface gain of 12% from the datasheet's rear-gain table.
-- **Limits.** Nine monthly points for generation; daily data covers only import and export. An efficiency fitted on the same months it judges. Satellite estimates for a grid cell rather than a sensor on the roof. No inverter-level data.
+- **Limits.** Nine monthly points for generation; daily data covers only import and export. Air temperature is NASA's 24-hour mean, not a panel or daytime reading, so heat losses are somewhat understated. An efficiency fitted on the same months it judges. Satellite estimates for a grid cell rather than a sensor on the roof. No inverter-level data.
 
 Every number and chart in this piece is regenerated from the project's data with a single command.
 

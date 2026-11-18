@@ -97,6 +97,15 @@ NASA POWER weather (cached CSV) ┘   sunlight on     every       every       HT
 release. That erased what had looked like monsoon over-delivery, so the latest months are
 always re-downloaded before a new bill is analysed.
 
+**Temperature means air, not panels.** The heat model starts from NASA's 24-hour mean air
+temperature and converts it to cell temperature with the datasheet's NOCT. Daytime air is
+warmer (about 6 °C in the dry months), so heat losses read somewhat low; re-running with
+sun-weighted daytime air moves no month by more than 0.9 points.
+
+**Daily data checks the daily model.** Within each month, the model's day-by-day generation
+explains 44% of the swings in daily export (an even split explains none), and only one day in 262
+implies exporting more than the panels made.
+
 **Measured vs modelled.** Generation, import and export are metered. Weather is satellite
 estimates. The white-roof gain and its heat effect are modelled from the module datasheet and
 published field tests, not measured on this roof. The article labels each.
@@ -109,7 +118,7 @@ published field tests, not measured on this roof. The article labels each.
 pip install -e ".[dev,app,article]"
 python scripts/build_article.py      # site/index.html, article/blog.md, PDF, figures, FINDINGS.md
 streamlit run app/streamlit_app.py   # interactive version with adjustable assumptions
-pytest                               # 42 tests, offline
+pytest                               # 44 tests, offline
 ```
 
 The PDF and PNG charts need a Chromium browser (`playwright install chromium`).
