@@ -1,9 +1,7 @@
-"""The article's charts, defined once in Plotly.
+"""Plotly charts for the Streamlit app.
 
-The same figure objects are rendered three ways:
-  * interactive, in site/index.html (colours swapped for theme tokens at runtime)
-  * interactive, in the Streamlit app
-  * static PNG, for the PDF and the blog post (via kaleido)
+These were the archived article's charts (site/archive/, article/archive/figures/). The current
+article (site/index.html) draws its own simpler charts in the browser from site/data.json.
 
 Colours come from PALETTE. Every colour string is produced by `col()`, so the
 HTML renderer can map each one back to a theme token by exact string match.

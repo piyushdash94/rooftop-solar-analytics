@@ -2,8 +2,8 @@
 
     streamlit run app/streamlit_app.py
 
-Same numbers and the same charts as site/index.html (both come from
-solar_analytics.story and solar_analytics.figures), plus controls for the
+Built on the same analysis as the article (solar_analytics.story), with the
+older, fuller chart set (solar_analytics.figures) and controls for the
 assumptions a reader is most likely to want to change.
 """
 

@@ -11,39 +11,56 @@ family. Culture to preserve: every number traceable to data, every caveat visibl
 estimate labelled as one. The repo has already caught a utility print defect and several of
 its own modelling mistakes, and the article says so.
 
-## How the pieces fit
+## How the pieces fit (since 20 Nov 2026)
+
+The article is HAND-WRITTEN and published as it is: `site/index.html`. Only `site/data.json`
+is generated, by `scripts/update_data.py`, from the CSVs via `story.compute()`. The page's
+charts and every changeable number (`data-k="path.in.json"`, with the current value as default
+text) read from it. There is no templating, no PDF/blog build, no article.md any more.
 
 ```
-data/                          inputs only; bills.csv is hand-transcribed and authoritative;
-                               daily_meter.csv is the TPCODL portal's daily import/export (no generation)
+data/                          bills.csv (hand-transcribed, CORRECTED dates), meter_readings.csv,
+                               daily_meter.csv (portal daily import/export, exact),
+                               daily_generation.csv (portal solar-meter chart, read ±0.2 kWh),
+                               occupancy.csv, raw/ NASA POWER weather
 src/solar_analytics/
   config.py     Site, Tariff, Module dataclasses. The only place site facts live.
-  loaders.py    bills, meter readings, occupancy; validate_bills() finds reconciliation defects
+  loaders.py    bills, meters, occupancy, daily portal data; validate_bills(), reconcile_daily()
   physics.py    daily weather -> sunlight on the panels -> heat derate -> E_eff; period rollup
-  story.py      compute(): EVERY number the article uses, as a JSON-able dict with `facts`
-  figures.py    every chart, defined once in Plotly; FIGURES maps id -> (builder, caption)
-  weather.py    refresh data/raw/nasa_power_daily.csv (python -m solar_analytics.weather START END)
-article/article.md             the prose. [[fact]] placeholders, {{fig:id}} / {{figs:a,b}} markers,
-                               {{ref:key}} citations (keys in article/references.json, all verified)
-scripts/build_article.py       renders site/index.html, article/blog.md, article/figures/*.png,
-                               article/rooftop-solar-article.pdf and FINDINGS.md
-app/streamlit_app.py           interactive companion; same story + figures, plus what-if sliders
-tests/                         44 tests; test_story.py / test_cities.py pin each document's conclusions
-research/cities.md             second document: same array in 12 cities (cities.py, CITY_FIGURES);
-                               built by build_article.py into site/cities/ and research/
+  story.py      compute(): every number (facts dict); experiment; daily checks
+  figures.py    Plotly figures, used only by the Streamlit app now
+  cities.py     the frozen twelve-cities analysis (tests still run it)
+  weather.py    NASA POWER download (daily; --daytime for sun-weighted air temperature)
+scripts/update_data.py         the ONLY monthly rebuild: writes site/data.json
+site/index.html                the article (edit prose by hand)
+site/archive/index.html        the long technical article, frozen 18 Nov 2026 (do not edit)
+site/cities/index.html         twelve-cities page, frozen (do not edit)
+article/archive/               archived article as blog.md, PDF, figures, references.json
+app/streamlit_app.py           interactive explorer
+tests/                         39 tests; test_site.py keeps page and data.json in step
 ```
 
-Never hand-edit `site/index.html`, `article/blog.md`, `FINDINGS.md` or the PNGs/PDF. Edit
-`article/article.md`, `story.py` or `figures.py`, then run `python scripts/build_article.py`.
-A number in prose must come from `facts`; add it to `story.py` rather than typing it.
+Prose numbers that will change belong in data.json with a data-k binding; add the field in
+update_data.py. Historical facts (e.g. "March covered 29 days") may be typed.
 
 ## Site facts
 
 In `config.py`. 3.0 kWp, commissioned 2026-02-08, Waaree BiN-01 bifacial TOPCon
-(γ = −0.30 %/°C, NOCT 43 °C, bifaciality 0.80). **Panels are fixed at 12°, facing south.
-Treat that as given; the article does not discuss tilt** (the residual pattern is the same
-anywhere from 8° to 25°, which is why). Ground albedo 0.12 (dark concrete). TPCODL domestic LT
+(γ = −0.30 %/°C, NOCT 43 °C, bifaciality 0.80). **Panels are modelled at 12°, facing south.**
+The article has one short tilt paragraph (owner asked, 20 Nov): data fits 10–15° best, and the
+conclusions hold from 8° to 20°. Do not change the model's tilt without a measurement. Ground albedo 0.12 (dark concrete). TPCODL domestic LT
 slabs 2.90 / 4.70 / 5.70 / 6.10 + 4% duty; top-slab value of a unit ₹6.34.
+
+## Daily generation (added 2026-11-20)
+
+`data/daily_generation.csv`: 21 Oct – 19 Nov from the portal's solar-meter (AS0210962) chart
+screenshot, read on gridline-calibrated crops; the same method reproduced exact import to 0.05
+kWh. Results: physics model (η frozen) within 1% over 26 days, R² 0.90, clear-day miss ~6%; the
+sunlight line under-forecasts November ~6% (winter geometry). Export attenuation (0.54) is
+household self-use rising with generation (0.37 kWh per kWh), not satellite error. Real daily
+demand matched the modelled split (r 0.95). 18–19 Nov low output = cyclone (IMD watch 15 Nov).
+Tilt test (5–30°): Nov daily fits best at 10–12°; ≥20° over-forecasts winter 4–7%; typical-year
+forecast changes ≤1.5% for 12→20°. Owner thinks tilt may be >12°: unmeasured; keep 12°.
 
 ## Data state as of 2026-11-18 (through the October bill)
 
@@ -171,20 +188,18 @@ Settled-dust soiling is not modelled. No money on this page, kWh only.
 
 Self-sufficiency and bill offset are different numbers; prose must say which.
 
-## Adding a bill
+## Adding a bill or new daily data
 
 1. Download the month's daily import/export from the TPCODL portal and append to
-   `data/daily_meter.csv`. Append three cumulative readings to `data/meter_readings.csv` and one
-   row to `data/bills.csv` on the CORRECTED dates (the calendar month; printed dates go in
-   `printed_start`/`printed_end`), then confirm with `reconcile_daily` that the new period
-   matches to ~0.01 kWh. (`export_kwh` is the meter diff; `billed_export_printed_kwh` is what
-   the annexure says.)
+   `data/daily_meter.csv`; add daily solar-meter readings to `data/daily_generation.csv`.
+   Append three cumulative readings to `data/meter_readings.csv` and one row to `data/bills.csv`
+   on the CORRECTED dates (the calendar month; printed dates go in `printed_start`/`printed_end`),
+   then confirm with `reconcile_daily` that the new period matches to ~0.01 kWh.
    Add an `occupancy.csv` row if the house was empty.
-2. Refresh `data/raw/nasa_power_daily.csv` with `python -m solar_analytics.weather` (it lags ~2 weeks; `physics.period_rollup` scales
-   partial coverage, keep that).
-3. Bump counts in `tests/test_validation.py`; `pytest`.
-4. `python scripts/build_article.py`; reread the article. If `tests/test_story.py` fails, a
-   conclusion changed and the prose needs rewriting, not the test.
+2. Append new days to `data/raw/nasa_power_daily.csv` (append-only: never rewrite earlier rows,
+   or the frozen experiment shifts). NASA lags ~2 weeks and revises; note big revisions.
+3. Bump counts in `tests/test_validation.py`; `python scripts/update_data.py`; `pytest`.
+4. Read site/index.html in a browser. If a conclusion changed, edit that prose by hand.
 
 ## Things that were wrong and are fixed — don't reintroduce
 
@@ -205,9 +220,12 @@ Self-sufficiency and bill offset are different numbers; prose must say which.
 
 ## Article and site direction
 
-Writing: plain, first-person plural, hunch → test → result. Short direct sentences; no
+The current article is the SIMPLE version for a general reader: plain words, five charts
+(per-day monthly bars + forecast, sunlight scatter, daily meter vs model, where the electricity
+goes, demand vs temperature), a month table, a short "what we got wrong" list. Technical depth
+lives in the archive. Writing: plain, first-person plural, hunch → test → result. Short direct sentences; no
 em-dash asides or stock phrases. Every chart has a one-line caption saying what it shows.
-Every claim from outside this data carries a {{ref:...}} citation. No to-do lists or
+Every claim from outside this data links its source in the footer. No to-do lists or
 suggestions to take photos or measurements in the article. GitHub user: piyushdash94.
 Design: light theme only (white page, no dark mode, also in Streamlit), marigold for sun, monsoon blue for rain, deep green for PV, rust for
 shortfalls; one typeface (Source Sans 3); hairline rules; colours as CSS tokens; chart colours mapped to the same tokens at runtime. No uppercase eyebrows, no numbered
@@ -221,6 +239,6 @@ before and after. Do not resurrect parallel metric code: add numbers to `story.p
 
 ## Conventions
 
-Python ≥ 3.10. `pip install -e ".[dev,app,article]"`. kWh everywhere; ₹ via `Tariff.cost()`.
+Python ≥ 3.10. `pip install -e ".[dev,app]"`. kWh everywhere; ₹ via `Tariff.cost()`.
 Billing periods are closed intervals, ISO dates. Round for display only. Tests never fetch
-weather. Static PNGs need kaleido and a Chromium (`BROWSER_PATH`).
+weather.

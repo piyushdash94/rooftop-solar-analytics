@@ -90,30 +90,6 @@ def test_dimming_is_aerosol_not_cloud(B):
     assert t["kt"]["p"] > 0.05
 
 
-def test_every_fact_used_by_article_exists(B):
-    import re
-    from pathlib import Path
-    path = Path(__file__).resolve().parents[1] / "article" / "article.md"
-    text = path.read_text(encoding="utf-8")
-    used = set(re.findall(r"\[\[(\w+)\]\]", text))
-    assert used <= set(B["facts"]), used - set(B["facts"])
-
-
-def test_citations_resolve_and_every_source_is_cited():
-    """Across both documents: no dangling keys, no unused sources."""
-    import json
-    import re
-    from pathlib import Path
-    root = Path(__file__).resolve().parents[1]
-    text = "\n".join((root / f).read_text(encoding="utf-8")
-                      for f in ("article/article.md", "research/cities.md"))
-    refs = json.loads((root / "article" / "references.json").read_text(encoding="utf-8"))
-    cited = {k for m in re.findall(r"\{\{ref:([a-z0-9_,]+)\}\}", text) for k in m.split(",")}
-    assert cited <= set(refs), cited - set(refs)
-    assert set(refs) <= cited, f"listed but never cited: {set(refs) - cited}"
-    assert all(r["url"].startswith("https://") for r in refs.values())
-
-
 def test_white_roof_heat_bounds(B):
     """Model output, not a measured claim.
 

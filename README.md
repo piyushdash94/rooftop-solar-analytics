@@ -1,174 +1,91 @@
-# Reading a rooftop against the sky
+# Satya Vihar rooftop solar
 
 [![CI](https://github.com/piyushdash94/rooftop-solar-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/piyushdash94/rooftop-solar-analytics/actions)
 [![Article](https://img.shields.io/badge/article-live-2B6350)](https://piyushdash94.github.io/rooftop-solar-analytics/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A 3 kWp bifacial solar array went up on a family roof in Bhubaneswar, India, in February 2026.
-There is no inverter app and no hardware logging, only monthly electricity bills. This project
-joins those bills to free NASA satellite weather and asks three questions. Is the system
-working as it should? Why did the bills go up when the panels were new? What will it make
-next year?
+A 3 kW bifacial solar system went up on a family roof in Bhubaneswar, India, in February 2026.
+It has no app and no data logger. This project reads it from three free sources: the monthly
+electricity bills, the utility's daily meter data, and NASA satellite weather.
 
-**[Read the article](https://piyushdash94.github.io/rooftop-solar-analytics/)** (interactive charts) ·
-[PDF](article/rooftop-solar-article.pdf) · [Blog version](article/blog.md) · `streamlit run app/streamlit_app.py`
+**[Read the article](https://piyushdash94.github.io/rooftop-solar-analytics/)** ·
+[full technical version (archived)](https://piyushdash94.github.io/rooftop-solar-analytics/archive/) ·
+[same roof, twelve cities](https://piyushdash94.github.io/rooftop-solar-analytics/cities/)
 
-Data: nine TPCODL bills, 8 February to 31 October 2026 (266 days, through the October bill), plus
-263 days of daily import and export from the TPCODL consumer portal.
+## What it shows (to 19 November 2026)
 
----
+- **Made 3,181 kWh** in its first nine bills and took **₹19,926** off them. The sun paid for
+  46% of what the house used: 26% used directly, 20% as export credits.
+- **Sunlight explains 93%** of month-to-month output. A physics model (sunlight on the tilted
+  panels, a heat loss, one fitted efficiency) forecasts it well: October came in at 384 kWh
+  against 389 forecast before the bill, and over 26 days of daily solar-meter readings the
+  model's total was within 1%.
+- **A typical year should give about 4,540 kWh** (4,280–4,670 across ten years of weather).
+- **Bills rose because the house used more**, mostly air conditioning: use is flat at about
+  19 kWh a day until the daily mean temperature passes ~25.5 °C, then rises 2.2 kWh per degree.
+- **Only May fell clearly short** (−9% against the weather). Heat or dust; a test registered
+  before winter will check.
+- **The bills print the wrong reading dates.** The daily portal data matches every bill to
+  0.01 kWh only on corrected dates (March covered 29 days, not 31).
 
-## What the data says
+## How the repo works
 
-| Question | Answer |
-|---|---|
-| What drives output? | **Sunlight explains 93%** of month-to-month generation. Adding temperature improves held-out predictions (4.3% miss vs 5.1%); adding rain makes them worse. |
-| Can it forecast? | The forecast published before October's bill said **389 kWh; the meter read 384 (−1.1%)**. Across all months, holding each out in turn, the typical miss is about 5%. |
-| Were the bills right? | **Not their dates.** Daily portal data matches every bill to 0.01 kWh only after shifting the periods: the March bill covered 29 days, not the 31 printed. That one correction removed a fake March shortfall and revealed temperature's effect. |
-| Is the system healthy? | Yes. Against a physics model, only **May (−9%)** clearly falls short. May is heat or dust; monthly bills cannot separate the two. |
-| Dust, heat or sky? | An open experiment, **pre-registered on 8 November 2026 and amended on 18 November** (still before any winter bill) once the date error was found. On the corrected dates the evidence is weak and dust and sky predict nearly the same winter residual, so the amended test asks only whether heat drives it: a December–January residual above +1.2% says heat. Both the original and amended rules will be scored. |
-| Why did bills rise? | **Demand rose about 75% per day** from February to June as cooling load grew. Daily data shows the shape: flat at 19 kWh a day until the daily mean passes ~25.5 °C, then +2.2 kWh per degree. Generation did not fall. |
-| What did the daily data date? | The house mostly empty 16–23 May (156 kWh below what the heat predicts), guests 30 Sep – 8 Oct (+86 kWh), and one likely long daytime power cut on 2 September. |
-| What will a year bring? | About **4,540 kWh** in a typical year, and 4,280–4,670 across the last ten years of weather. 2026 is a poor guide: July and August were about 20% darker than normal, the darkest in ten years. |
-| What has it saved? | **₹19,926** so far. Generation equals 46% of household demand on the bill; 26% of demand was met directly by the panels at the moment they produced. |
-| Would a white roof help? | About **+509 kWh a year** (+11%), payback 2.5–3.7 years, modelled. It adds light, not cooling: the panels end up about 1.3–2.6 °C warmer, which costs 16–36 kWh of the gain. |
-| Is the sky changing? | Since 1984, sunlight at this location has fallen 0.15 kWh/m² per day per decade. At this grid cell the decline is in the clear-sky component, consistent with aerosols. |
-
-![Generation per day against sunlight per day, one point per billing month](article/figures/scatter.png)
-
----
-
-## Research: same roof, twelve cities
-
-**[Read it](https://piyushdash94.github.io/rooftop-solar-analytics/cities/)** ·
-[PDF](research/same-roof-twelve-cities.pdf) · [Blog version](research/cities_blog.md)
-
-The same 3 kWp array, run through ten years of NASA weather (2016–2025) in twelve Indian cities.
-The hypothesis, written down before running anything, was that **monsoon cloud decides rooftop
-yield far more than summer heat**. One of its three tests held.
-
-- **Heat is a small tax.** It costs 3.8–6.1% of output, and the hottest cities still produce
-  the most. The spread in sunlight across cities is 12 times the spread caused by heat.
-- **The monsoon does not separate cities.** It explains only 15% of the between-city gap in
-  panel sunlight. Winter explains 43%, the pre-monsoon months 30%.
-- **Haze matters more than cloud.** Splitting the gap into latitude, haze and cloud, haze is the
-  largest part (42% over the year). The haziest dry-season skies are in Kolkata, Lucknow,
-  Bhubaneswar, Guwahati and Delhi.
-- Ahmedabad tops the table at 5,230 kWh a year; Kolkata is last at 4,311 (21% less).
-  Bhubaneswar is 10th of 12, and its fresh run agrees with the bill-calibrated article to 0.1%.
-
-![The same array in twelve cities](research/figures/c_rank.png)
-
----
-
-## How it works
+The article is a hand-written page, published as it is. Only its numbers and charts change
+when new data arrives, and they all come from one file:
 
 ```
-bills.csv + meter_readings.csv ─┐
-                                ├─► physics.py ─► story.py ─► figures.py ─► build_article.py
-NASA POWER weather (cached CSV) ┘   sunlight on     every       every       HTML · PDF · blog
-                                    the panels      number      chart       + Streamlit app
+data/*.csv  ──►  scripts/update_data.py  ──►  site/data.json  ──►  site/index.html (charts + numbers)
 ```
 
-1. **Reconcile the bills.** Every billing period is checked against cumulative meter readings
-   and against the daily portal data. This caught a print defect on the July bill (export
-   printed as 204.10 kWh; the meter says 102.05; the energy charge used the right figure) and
-   wrong printed reading dates (the corrected periods, and the printed ones, are both kept in
-   `bills.csv`).
-2. **Fetch the weather.** Daily sunlight, temperature and rain for the site's coordinates from
-   [NASA POWER](https://power.larc.nasa.gov/): free, no key, cached in `data/raw/` so every
-   result reproduces offline.
-3. **Model generation two ways.**
-   - *Sunlight line:* generation per day = 2.17 × sunlight + 1.92 (R² 0.93). One input, two
-     fitted numbers.
-   - *Physics model:* sunlight on the 12° panel plane × heat loss × 3 kWp × one fitted
-     efficiency. The best forecaster (3.8% held-out miss against the line's 5.1%), and it
-     explains *why* a month over- or under-delivered. It is also the model run over ten years
-     of historical weather for the typical-year forecast.
-4. **Choose features by test, not by hunch.** Each candidate model is fitted on all months but
-   one and asked to predict the one left out, for every month in turn (leave-one-out). Only what improved
-   those held-out predictions stayed.
-5. **Write once, render everywhere.** `story.compute()` produces every number and
-   `figures.py` every chart. The prose in `article/article.md` uses placeholders like
-   `[[fc_total]]`, so the text and the charts cannot disagree.
+Every number in the page that can change carries a `data-k="..."` key into `data.json`, and
+its current value as default text, so the page reads correctly even before the data loads.
 
-**Data gets revised.** NASA revised July 2026 sunlight up ~5% and August ~9% after first
-release. That erased what had looked like monsoon over-delivery, so the latest months are
-always re-downloaded before a new bill is analysed.
+### When a new bill or new portal data arrives
 
-**Temperature means air, not panels.** The heat model starts from NASA's 24-hour mean air
-temperature and converts it to cell temperature with the datasheet's NOCT. Daytime air is
-warmer (about 6 °C in the dry months), so heat losses read somewhat low; re-running with
-sun-weighted daytime air moves no month by more than 0.9 points.
+1. Add the data:
+   - `data/bills.csv` and `data/meter_readings.csv`, on the corrected dates (each bill covers
+     one calendar month; keep the printed dates in `printed_start` / `printed_end`);
+   - `data/daily_meter.csv`, the portal's daily import and export spreadsheet;
+   - `data/daily_generation.csv`, daily solar-meter readings (from the portal chart).
+2. Append new days to the weather: `python -m solar_analytics.weather <start> <end>` writes a
+   fresh file; keep earlier rows as they are so the frozen winter test does not shift.
+3. `python scripts/update_data.py`, then `pytest`.
+4. Read the page. If a conclusion changed, edit that sentence in `site/index.html`.
 
-**Daily data checks the daily model.** Within each month, the model's day-by-day generation
-explains 44% of the swings in daily export (an even split explains none), and only one day in 262
-implies exporting more than the panels made.
-
-**Measured vs modelled.** Generation, import and export are metered. Weather is satellite
-estimates. The white-roof gain and its heat effect are modelled from the module datasheet and
-published field tests, not measured on this roof. The article labels each.
-
----
-
-## Run it
-
-```bash
-pip install -e ".[dev,app,article]"
-python scripts/build_article.py      # site/index.html, article/blog.md, PDF, figures, FINDINGS.md
-streamlit run app/streamlit_app.py   # interactive version with adjustable assumptions
-pytest                               # 44 tests, offline
-```
-
-The PDF and PNG charts need a Chromium browser (`playwright install chromium`).
-
-### Add a new bill
-
-1. Append the three cumulative meter readings to `data/meter_readings.csv` and one row to
-   `data/bills.csv`. If the house stood empty, add a row to `data/occupancy.csv`.
-2. Refresh the weather: `python -m solar_analytics.weather 2026-02-08 <bill end date>`.
-3. `pytest`, then `python scripts/build_article.py`.
-
-The numbers update themselves. If a conclusion changes, `tests/test_story.py` fails and says
-which one, so the prose gets rewritten rather than going stale.
-
----
+`tests/test_site.py` fails if `data.json` is older than the bills or if the page binds a
+number the data does not have.
 
 ## Layout
 
 ```
-data/                    bills, meter readings, daily portal import/export, occupancy;
-                         data/raw/ holds NASA POWER weather
-src/solar_analytics/
-  config.py              site, module and tariff facts (the only place they live)
-  loaders.py             read and reconcile bills, meters and daily portal data
-  physics.py             weather → sunlight on the panels → heat loss → expected energy
-  story.py               every number in the article
-  figures.py             every chart (Plotly)
-  weather.py             refresh the cached NASA POWER data
-  cities.py              the twelve-city research: same array, ten years of weather per city
-article/                 article.md (source), references.json, generated blog, PDF, figures
-research/                cities.md (source), generated blog, PDF, figures
-app/streamlit_app.py     interactive companion
-scripts/build_article.py renders the article in all formats
-site/index.html          the published article (GitHub Pages); site/cities/ the research page
-tests/                   bill reconciliation, article conclusions, published page
+site/index.html          the article (hand-written) · site/data.json (generated)
+site/archive/            the long technical article, frozen on 18 Nov 2026
+site/cities/             the twelve-cities research page, frozen
+data/                    bills, meter readings, daily portal data, daily generation, weather
+src/solar_analytics/     analysis: loaders, physics model, story.compute() (all numbers),
+                         cities, weather download; figures.py for the Streamlit app
+scripts/update_data.py   the monthly rebuild
+app/streamlit_app.py     interactive explorer (streamlit run app/streamlit_app.py)
+article/archive/         the archived article as Markdown, PDF and figures
+tests/                   39 tests: bill reconciliation, model conclusions, page/data in step
 ```
 
-## Tech stack
+## Run it
 
-Python · pandas, NumPy, SciPy · pvlib (solar position, clear-sky model) · Plotly ·
-Streamlit · Playwright (PDF) · pytest, ruff · GitHub Actions and GitHub Pages.
+```bash
+pip install -e ".[dev,app]"
+python scripts/update_data.py
+pytest
+cd site && python -m http.server   # open http://localhost:8000
+```
 
 ## Sources
 
-- **Bills:** TP Central Odisha Distribution Ltd (TPCODL), hand-transcribed.
-- **Weather:** NASA POWER daily and monthly API. Sunlight from CERES satellite products,
-  temperature and rain from MERRA-2.
+- **Bills and meter data:** TP Central Odisha Distribution Ltd (TPCODL).
+- **Weather:** [NASA POWER](https://power.larc.nasa.gov/) daily and hourly API.
 - **Module:** Waaree Elite N-type BiN-01 bifacial datasheet.
-- **Literature:** 18 papers and documents, cited in the article and listed in
-  `article/references.json`.
+- **Literature:** cited in the archived article (`article/archive/references.json`).
 
 ## License
 
