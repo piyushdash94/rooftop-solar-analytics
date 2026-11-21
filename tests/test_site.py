@@ -49,7 +49,7 @@ def test_daily_generation_is_used(data):
 
 
 def test_charts_and_theme():
-    assert HTML.count('class="plot') == 5
+    assert HTML.count('class="plot') == 6
     assert "https://cdnjs.cloudflare.com/ajax/libs/plotly.js/4.1.1/plotly-cartesian.min.js" in HTML
     assert "prefers-color-scheme: dark" not in HTML
     assert '<meta name="color-scheme" content="light">' in HTML
@@ -59,3 +59,19 @@ def test_archive_pages_are_frozen_and_linked():
     for p in ("site/archive/index.html", "site/cities/index.html"):
         assert "Archived snapshot" in (ROOT / p).read_text(encoding="utf-8")
     assert 'href="archive/"' in HTML and 'href="cities/"' in HTML
+
+
+def _jsfmt(v):
+    """The page's fmt(): thousands get separators, whole numbers drop the .0."""
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        if abs(v) >= 1000:
+            return f"{round(v):,}"
+        return str(int(v)) if float(v).is_integer() else repr(float(v))
+    return str(v)
+
+
+def test_default_text_matches_data(data):
+    """Each bound number's fallback text equals what the script would write, so the page reads
+    correctly even if data.json fails to load. Run scripts/update_data.py, then sync defaults."""
+    for k, txt in re.findall(r'data-k="([\w.]+)">([^<]*)<', HTML):
+        assert txt == _jsfmt(_get(data, k)), f"{k}: page says {txt!r}"

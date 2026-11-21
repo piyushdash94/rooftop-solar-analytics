@@ -52,6 +52,12 @@ th,td{text-align:right;padding:.35rem .5rem;border-bottom:1px solid var(--rule);
 th:first-child,td:first-child{text-align:left}
 th{font-weight:600;color:var(--muted)}
 td.short{color:var(--rust);font-weight:600}
+table.score td,table.score th{white-space:normal}
+table.score td:first-child{color:var(--muted);width:44%}
+table.score th:nth-child(2),table.score td:nth-child(2){color:#8A600C}
+table.score th:nth-child(3),table.score td:nth-child(3){color:var(--pv)}
+table.score td.win{font-weight:700}
+.legend-inline{display:inline-block;width:.8em;height:.8em;border-radius:2px;vertical-align:-.05em;margin-right:.3em}
 footer{border-top:1px solid var(--rule);margin-top:3rem;padding-top:1rem;color:var(--muted);font-size:.92rem}
 @media (max-width:640px){
   body{font-size:17px} h1{font-size:1.9rem}
@@ -78,27 +84,45 @@ footer{border-top:1px solid var(--rule);margin-top:3rem;padding-top:1rem;color:v
 
 <div class="latest">
   <h3>Latest</h3>
-  <p><b><span data-k="latest.label">Oct</span> bill:</b> the panels made <span class="num" data-k="latest.gen">384.4</span> kWh against a forecast of <span class="num" data-k="tests.0.fc">389</span> published before the bill arrived. The house bought <span class="num" data-k="latest.imp">604.4</span> kWh, sent <span class="num" data-k="latest.exp">175.2</span> kWh back, and paid ₹<span class="num" data-k="latest.bill">2414</span>; without solar it would have paid about ₹<span class="num" data-k="latest.saved">2439</span> more.</p>
+  <p><b><span data-k="latest.label">Oct</span> bill:</b> the panels made <span class="num" data-k="latest.gen">384.4</span> kWh against a forecast of <span class="num" data-k="tests.0.fc">389</span> published before the bill arrived. The house bought <span class="num" data-k="latest.imp">604.4</span> kWh, sent <span class="num" data-k="latest.exp">175.2</span> kWh back, and paid ₹<span class="num" data-k="latest.bill">2,414</span>; without solar it would have paid about ₹<span class="num" data-k="latest.saved">2,439</span> more.</p>
   <p><b><span data-k="mtd.label">November</span> so far</b> (to <span data-k="mtd.to">20 November</span>): <span class="num" data-k="mtd.gen">214</span> kWh, or <span class="num" data-k="mtd.per_day">10.7</span> a day against <span class="num" data-k="mtd.fc_per_day">12.1</span> forecast. A cyclone in the Bay of Bengal brought cloud and rain from 18 November, and output fell to 4.7, 1.95 and 1.25 kWh on the 18th, 19th and 20th.</p>
 </div>
 
 <h2>What it has made, and what to expect</h2>
 <p>Solid bars are what the meter recorded each month; pale bars are the forecast for the next twelve months, with the range ten years of past weather would give. We use kilowatt-hours <em>per day</em> so that short and long billing months compare fairly.</p>
 <figure><div class="plot tall" id="c-year"></div>
-<figcaption>Average generation per day. Forecast bars run the same panels through the weather of 2016–2025; the whiskers show the 10th to 90th percentile year.</figcaption></figure>
+<figcaption>Average generation per day. Forecast bars run the physics model through the weather of 2016–2025; the whiskers show the 10th to 90th percentile year. The dotted line is the simpler sunlight regression's forecast, compared below.</figcaption></figure>
 <p>A typical year should give about <span class="num" data-k="headline.year">4,544</span> kWh, somewhere between <span class="num" data-k="headline.year_lo">4,279</span> and <span class="num" data-k="headline.year_hi">4,671</span> depending on the weather. 2026 itself is a poor guide: July and August were <span data-k="headline.jul">21</span>% and <span data-k="headline.aug">19</span>% below normal for sunlight, darker than any of the previous ten years.</p>
 
 <h2>Sunlight explains almost everything</h2>
 <p>Plot each month's output per day against the sunlight that reached the ground and the points fall close to a straight line. Sunlight alone explains <span data-k="headline.r2">93</span>% of the month-to-month change. The sunlight figures come from NASA's POWER service, which estimates them from satellites for the square of map around our house.</p>
 <figure><div class="plot" id="c-sun"></div>
 <figcaption>One dot per billing month. Line: generation per day = <span data-k="headline.fit_a">2.17</span> × sunlight + <span data-k="headline.fit_c">1.92</span>.</figcaption></figure>
-<p>For forecasting we use a slightly fuller model: sunlight on the tilted panels rather than on flat ground, a small loss when the panels run hot, and one efficiency factor fitted to the bills. It matters in winter, when the low sun favours tilted panels. The straight line would under-forecast November by about 6%; the fuller model gets it within 1%.</p>
+<p>That straight line is our first model, a simple regression. The second is a physics model: sunlight on the tilted panels rather than on flat ground, a small loss when the panels run hot, and one efficiency factor fitted to the bills. The two are compared side by side further down.</p>
 
 <h2>Checked one day at a time</h2>
 <p>In November we got the utility's daily chart for the solar meter itself, so we could compare the model with what the panels made each day. We read most values off the portal's chart and took exact figures from its meter table for 13–20 November. The chart readings agreed with the exact ones to within 0.06 kWh a day, and with the meter's total for 1–12 November to within 0.3%.</p>
 <figure><div class="plot" id="c-daily"></div>
-<figcaption>Bars: what the solar meter recorded each day. Line: what the model expected from that day's satellite sunlight (satellite data runs a few days behind).</figcaption></figure>
-<p>Over <span data-k="check.n">26</span> days, <span data-k="check.from">21 Oct</span> to <span data-k="check.to">15 Nov</span>, the model's total was within <span data-k="check.total_err_abs">0.8</span>% of the meter's, and it caught <span data-k="check.r2">90</span>% of the day-to-day ups and downs. On clear days it is usually within <span data-k="check.clear_mae_pct">6</span>%. The low days are weather, not faults: heavy rain on 27–28 October, cloud on 2 and 4 November, and the cyclone from the 18th.</p>
+<figcaption>Bars: what the solar meter recorded each day. Solid line: the physics model's expectation from that day's satellite sunlight. Dotted line: the simple regression. Satellite data runs a few days behind, so the lines stop before the cyclone.</figcaption></figure>
+<p>Over <span data-k="check.n">26</span> days, <span data-k="check.from">21 Oct</span> to <span data-k="check.to">15 Nov</span>, the physics model's total was within <span data-k="check.total_err_abs">0.8</span>% of the meter's, and it caught <span data-k="check.r2">90</span>% of the day-to-day ups and downs. On clear days it is usually within <span data-k="check.clear_mae_pct">6</span>%. The low days are weather, not faults: heavy rain on 27–28 October, cloud on 2 and 4 November, and the cyclone from the 18th.</p>
+
+<h2>Two ways to predict, compared</h2>
+<p>The <span class="legend-inline" style="background:var(--sun)"></span>simple regression uses only the sunlight on flat ground. The <span class="legend-inline" style="background:var(--pv)"></span>physics model also knows the panels are tilted towards the south and lose a little output when hot. To compare them fairly, each month below was predicted by a version of the model fitted to the other months only, so no model ever sees the month it is predicting.</p>
+<figure><div class="plot" id="c-compare"></div>
+<figcaption>How far each model's prediction was from the meter, month by month, with that month held out of the fit. Above zero: the model expected more than the panels made.</figcaption></figure>
+<div class="table-wrap"><table class="score">
+<thead><tr><th></th><th>Simple regression</th><th>Physics model</th></tr></thead>
+<tbody>
+<tr><td>What it uses</td><td>Sunlight on flat ground</td><td>Sunlight on the tilted panels, heat, one efficiency</td></tr>
+<tr><td>Typical monthly miss (held out)</td><td><span data-k="compare.line.mae">5.1</span>%</td><td class="win"><span data-k="compare.phys.mae">3.8</span>%</td></tr>
+<tr><td>Worst month</td><td><span data-k="compare.line.worst">14.6</span>%</td><td class="win"><span data-k="compare.phys.worst">10.5</span>%</td></tr>
+<tr><td>Daily total vs solar meter, <span data-k="check.from">21 Oct</span> to <span data-k="check.to">15 Nov</span></td><td><span data-k="check.line_vs_meter_s">−5.4%</span></td><td class="win"><span data-k="check.phys_vs_meter_s">+0.8%</span></td></tr>
+<tr><td>Day-to-day swings caught</td><td><span data-k="check.line_r2">90</span>%</td><td><span data-k="check.r2">90</span>%</td></tr>
+<tr><td>Typical daily miss</td><td><span data-k="check.line_mae">1.2</span> kWh</td><td class="win"><span data-k="check.mae">0.9</span> kWh</td></tr>
+<tr><td>Forecast for a typical year</td><td><span data-k="compare.line.year">4,375</span> kWh</td><td><span data-k="compare.phys.year">4,544</span> kWh</td></tr>
+</tbody></table></div>
+<p>Both models follow the weather equally well from day to day; they differ by season. Held out month by month, the physics model misses less on average, mostly because it handles the hottest, brightest month (May) and August better. It is not better every month: in February and October it guessed high while the regression came closer, February partly because the first day was not a full day of sunshine.</p>
+<p>The forecasts differ most in winter. Of the <span data-k="compare.gap_year">172</span> kWh a year between them, <span data-k="compare.gap_winter">125</span> come from November to February, because the physics model knows the tilted panels catch more of the low winter sun. November's daily readings side with it so far, but one month is not proof; December and January will be the sharper test. Adding temperature to the regression also helps (a <span data-k="compare.temp_mae">4.3</span>% typical miss), and adding rain makes it worse.</p>
 
 <h2>Where the electricity goes</h2>
 <p>The house uses solar power directly while the sun is up, sends any surplus to the grid, and buys from the grid at night and on dull days. Under net metering, each unit sent out cancels a unit bought, so the bill is for the difference.</p>
@@ -142,12 +166,20 @@ footer{border-top:1px solid var(--rule);margin-top:3rem;padding-top:1rem;color:v
 </ul>
 
 <h2>How this was made</h2>
-<p>Bills: TPCODL, from 8 February 2026. Daily import and export: the TPCODL consumer portal. Daily solar generation: the portal's chart for the solar meter, from 21 October. Weather: NASA POWER satellite estimates. Panel details: the Waaree bifacial module datasheet. Cyclone timing: India Meteorological Department warnings as reported in the press. All the code and data are on GitHub, and the longer, more technical version of this analysis is kept as an archive.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Data</th><th>Source</th><th>Covers</th></tr></thead>
+<tbody>
+<tr><td>Monthly bills</td><td>TPCODL</td><td><span data-k="coverage.bills">9</span> bills from 8 Feb</td></tr>
+<tr><td>Daily import and export</td><td>TPCODL consumer portal</td><td><span data-k="coverage.meter_days">263</span> days, <span data-k="coverage.meter_from">9 Feb</span> – <span data-k="coverage.meter_to">31 Oct</span></td></tr>
+<tr><td>Daily solar generation</td><td>Portal solar meter</td><td><span data-k="coverage.gen_days">31</span> days, <span data-k="coverage.gen_from">21 Oct</span> – <span data-k="coverage.gen_to">20 Nov</span></td></tr>
+<tr><td>Sunlight, temperature, rain</td><td>NASA POWER (satellite)</td><td>2016 onwards, to <span data-k="coverage.sun_to">15 Nov</span></td></tr>
+</tbody></table></div>
+<p>Panel details come from the Waaree bifacial module datasheet, and the cyclone timing from India Meteorological Department warnings as reported in the press. All the code and data are on GitHub, and the longer, more technical version of this analysis is kept as an archive.</p>
 
 <footer>
 <p><a href="https://github.com/piyushdash94/rooftop-solar-analytics">Code and data on GitHub</a> · <a href="archive/">Full technical article (archived, 18 Nov 2026)</a> · <a href="cities/">Same roof, twelve cities</a></p>
 <p>Sources: <a href="https://power.larc.nasa.gov/docs/methodology/">NASA POWER methodology</a> · <a href="https://rooftopsolarindia.com/datasheet/waaree-energies/datasheet-waaree-elite-n-type-bifacial-555W-560W-565W-570W-575W-580W-585W.pdf">Waaree BiN-01 datasheet</a> · <a href="https://www.nationpathindia.com/environment/bay-of-bengal-depression-imd-pre-cyclone-watch-andhra-odisha-november-2026">IMD pre-cyclone watch, 15 Nov 2026 (Nation Path India)</a></p>
-<p>Numbers and charts on this page update from <code>data.json</code> when new data arrives; last updated <span data-k="updated">2026-11-20</span>.</p>
+<p>Numbers and charts on this page update from <code>data.json</code> when new data arrives; last updated <span data-k="updated">2026-11-21</span>.</p>
 </footer>
 </main>
 
@@ -182,6 +214,8 @@ footer{border-top:1px solid var(--rule);margin-top:3rem;padding-top:1rem;color:v
         hovertemplate:'%{x}: %{y:.1f} kWh/day<extra></extra>'},
       {type:'bar',x:fx,y:fy,name:'Forecast, typical weather',marker:{color:c('pv-soft')},
         error_y:{type:'data',array:fe,arrayminus:fem,color:c('muted'),thickness:1,width:3},hovertemplate:'%{x}: %{y:.1f} kWh/day expected<extra></extra>'}];
+    tr.push({type:'scatter',mode:'lines+markers',x:fx,y:D.forecast.map(function(f){return f.line/dim(f.label)}),name:'Simple regression forecast',
+      line:{color:c('sun'),width:1.8,dash:'dot'},marker:{size:5,color:c('sun')},hovertemplate:'%{x}: %{y:.1f} kWh/day (regression)<extra></extra>'});
     if(D.mtd){tr.push({type:'scatter',mode:'markers',x:[fx[0]],y:[D.mtd.per_day],name:D.mtd.label+' so far',
       marker:{color:c('pv'),size:11,symbol:'diamond'},hovertemplate:D.mtd.label+' to '+D.mtd.to+': %{y:.1f} kWh/day<extra></extra>'})}
     var L=base(360);L.barmode='overlay';L.bargap=0.25;L.yaxis.title={text:'kWh per day'};L.xaxis.tickangle=-45;L.xaxis.type='category';
@@ -201,8 +235,18 @@ footer{border-top:1px solid var(--rule);margin-top:3rem;padding-top:1rem;color:v
     L.annotations=[{x:'2026-10-27',y:1,yref:'paper',text:'heavy rain',showarrow:false,yanchor:'bottom',font:{size:12,color:c('rain')}},
                    {x:'2026-11-18',y:1,yref:'paper',text:'cyclone',showarrow:false,yanchor:'bottom',font:{size:12,color:c('rain')}}];
     draw('c-daily',[{type:'bar',x:dd.map(function(x){return x.d}),y:dd.map(function(x){return x.gen}),name:'Solar meter',marker:{color:c('pv')},hovertemplate:'%{x|%d %b}: %{y:.1f} kWh<extra></extra>'},
-      {type:'scatter',mode:'lines+markers',x:dd.map(function(x){return x.d}),y:dd.map(function(x){return x.model}),name:'Model, from satellite sunlight',
-       line:{color:c('sun'),width:2},marker:{size:5},connectgaps:false,hovertemplate:'%{x|%d %b}: %{y:.1f} kWh expected<extra></extra>'}],L);
+      {type:'scatter',mode:'lines+markers',x:dd.map(function(x){return x.d}),y:dd.map(function(x){return x.model}),name:'Physics model',
+       line:{color:c('ink'),width:2},marker:{size:4,color:c('ink')},connectgaps:false,hovertemplate:'%{x|%d %b}: %{y:.1f} kWh expected (physics)<extra></extra>'},
+      {type:'scatter',mode:'lines',x:dd.map(function(x){return x.d}),y:dd.map(function(x){return x.line}),name:'Simple regression',
+       line:{color:c('sun'),width:1.8,dash:'dot'},connectgaps:false,hovertemplate:'%{x|%d %b}: %{y:.1f} kWh expected (regression)<extra></extra>'}],L);
+    // 3b. two models, held-out error by month
+    var cm=D.compare.months;
+    L=base(320);L.barmode='group';L.bargap=0.3;L.yaxis.title={text:'% off, month held out'};L.yaxis.zeroline=true;L.yaxis.zerolinecolor=c('muted');
+    L.yaxis.ticksuffix='%';L.xaxis.type='category';
+    draw('c-compare',[{type:'bar',x:cm.map(function(m){return m.label}),y:cm.map(function(m){return m.line_err}),name:'Simple regression',marker:{color:c('sun')},
+        customdata:cm.map(function(m){return [m.line,m.actual]}),hovertemplate:'%{x}: %{y:+.1f}% (predicted %{customdata[0]:.1f}, metered %{customdata[1]:.1f} kWh/day)<extra></extra>'},
+      {type:'bar',x:cm.map(function(m){return m.label}),y:cm.map(function(m){return m.phys_err}),name:'Physics model',marker:{color:c('pv')},
+        customdata:cm.map(function(m){return [m.phys,m.actual]}),hovertemplate:'%{x}: %{y:+.1f}% (predicted %{customdata[0]:.1f}, metered %{customdata[1]:.1f} kWh/day)<extra></extra>'}],L);
     // 4. where it goes
     var self=D.monthly.map(function(m){return (m.gen-m.exp)/m.days}),imp=D.monthly.map(function(m){return m.imp/m.days}),exp=D.monthly.map(function(m){return -m.exp/m.days});
     L=base(320);L.barmode='relative';L.yaxis.title={text:'kWh per day'};L.xaxis.type='category';
