@@ -61,6 +61,12 @@ household self-use rising with generation (0.37 kWh per kWh), not satellite erro
 demand matched the modelled split (r 0.95). 18–19 Nov low output = cyclone (IMD watch 15 Nov).
 Tilt test (5–30°): Nov daily fits best at 10–12°; ≥20° over-forecasts winter 4–7%; typical-year
 forecast changes ≤1.5% for 12→20°. Owner thinks tilt may be >12°: unmeasured; keep 12°.
+Calibrated 2026-11-21 against the portal's exact meter TABLE (rows = start-of-day cumulative
+reading + that day's kWh; `data/portal_cumulative.csv`): chart-read generation was within 0.06
+kWh/day (13–19 Nov) and −0.3% over 1–12 Nov (from the Oct closing reading 3181.41); chart-read
+import was +0.24–0.39 kWh/day high (+1.3% over 1–13 Nov). daily_generation.csv now carries
+`gen_source`/`imp_source`: exact table values for 13/14–20 Nov, earlier Nov scaled to the meter
+totals, Oct 21–31 raw chart reads. Prefer the table (exact) over the chart whenever available.
 
 ## Data state as of 2026-11-18 (through the October bill)
 

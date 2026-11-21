@@ -13,7 +13,7 @@ electricity bills, the utility's daily meter data, and NASA satellite weather.
 [full technical version (archived)](https://piyushdash94.github.io/rooftop-solar-analytics/archive/) ·
 [same roof, twelve cities](https://piyushdash94.github.io/rooftop-solar-analytics/cities/)
 
-## What it shows (to 19 November 2026)
+## What it shows (to 20 November 2026)
 
 - **Made 3,181 kWh** in its first nine bills and took **₹19,926** off them. The sun paid for
   46% of what the house used: 26% used directly, 20% as export credits.

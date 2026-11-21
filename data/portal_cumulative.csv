@@ -1,0 +1,5 @@
+start_of_day,meter,parameter,reading_kwh
+2026-11-13,AS0210962,generation,3324.239
+2026-11-20,AS0210962,generation,3393.912
+2026-11-14,AS0210961,import,5346.603
+2026-11-20,AS0210961,import,5428.563

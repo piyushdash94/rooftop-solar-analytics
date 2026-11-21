@@ -65,7 +65,7 @@ footer{border-top:1px solid var(--rule);margin-top:3rem;padding-top:1rem;color:v
 <main>
 
 <h1>Our rooftop solar, read from the bills</h1>
-<p class="byline">Piyush Dash · Satya Vihar, Bhubaneswar · data to <span data-k="mtd.to">19 November</span> 2026</p>
+<p class="byline">Piyush Dash · Satya Vihar, Bhubaneswar · data to <span data-k="mtd.to">20 November</span> 2026</p>
 
 <p class="lede">In February 2026 a 3 kW solar system went up on our family's roof. It has no app and no data logger, just the electricity bills, the utility's daily meter readings, and free NASA satellite weather. This page shows what that is enough to learn.</p>
 
@@ -79,7 +79,7 @@ footer{border-top:1px solid var(--rule);margin-top:3rem;padding-top:1rem;color:v
 <div class="latest">
   <h3>Latest</h3>
   <p><b><span data-k="latest.label">Oct</span> bill:</b> the panels made <span class="num" data-k="latest.gen">384.4</span> kWh against a forecast of <span class="num" data-k="tests.0.fc">389</span> published before the bill arrived. The house bought <span class="num" data-k="latest.imp">604.4</span> kWh, sent <span class="num" data-k="latest.exp">175.2</span> kWh back, and paid ₹<span class="num" data-k="latest.bill">2414</span>; without solar it would have paid about ₹<span class="num" data-k="latest.saved">2439</span> more.</p>
-  <p><b><span data-k="mtd.label">November</span> so far</b> (to <span data-k="mtd.to">19 November</span>): <span class="num" data-k="mtd.gen">212</span> kWh, or <span class="num" data-k="mtd.per_day">11.2</span> a day against <span class="num" data-k="mtd.fc_per_day">12.1</span> forecast. A cyclone in the Bay of Bengal brought cloud and rain from 18 November, and output fell to 2–5 kWh a day.</p>
+  <p><b><span data-k="mtd.label">November</span> so far</b> (to <span data-k="mtd.to">20 November</span>): <span class="num" data-k="mtd.gen">214</span> kWh, or <span class="num" data-k="mtd.per_day">10.7</span> a day against <span class="num" data-k="mtd.fc_per_day">12.1</span> forecast. A cyclone in the Bay of Bengal brought cloud and rain from 18 November, and output fell to 4.7, 1.95 and 1.25 kWh on the 18th, 19th and 20th.</p>
 </div>
 
 <h2>What it has made, and what to expect</h2>
@@ -95,10 +95,10 @@ footer{border-top:1px solid var(--rule);margin-top:3rem;padding-top:1rem;color:v
 <p>For forecasting we use a slightly fuller model: sunlight on the tilted panels rather than on flat ground, a small loss when the panels run hot, and one efficiency factor fitted to the bills. It matters in winter, when the low sun favours tilted panels. The straight line would under-forecast November by about 6%; the fuller model gets it within 1%.</p>
 
 <h2>Checked one day at a time</h2>
-<p>In November we got the utility's daily chart for the solar meter itself, so we could compare the model with what the panels made each day. We read the values off the chart to about ±0.2 kWh.</p>
+<p>In November we got the utility's daily chart for the solar meter itself, so we could compare the model with what the panels made each day. We read most values off the portal's chart and took exact figures from its meter table for 13–20 November. The chart readings agreed with the exact ones to within 0.06 kWh a day, and with the meter's total for 1–12 November to within 0.3%.</p>
 <figure><div class="plot" id="c-daily"></div>
 <figcaption>Bars: what the solar meter recorded each day. Line: what the model expected from that day's satellite sunlight (satellite data runs a few days behind).</figcaption></figure>
-<p>Over <span data-k="check.n">26</span> days, <span data-k="check.from">21 Oct</span> to <span data-k="check.to">15 Nov</span>, the model's total was within <span data-k="check.total_err_abs">1.0</span>% of the meter's, and it caught <span data-k="check.r2">90</span>% of the day-to-day ups and downs. On clear days it is usually within <span data-k="check.clear_mae_pct">6</span>%. The low days are weather, not faults: heavy rain on 27–28 October, cloud on 2 and 4 November, and the cyclone from the 18th.</p>
+<p>Over <span data-k="check.n">26</span> days, <span data-k="check.from">21 Oct</span> to <span data-k="check.to">15 Nov</span>, the model's total was within <span data-k="check.total_err_abs">0.8</span>% of the meter's, and it caught <span data-k="check.r2">90</span>% of the day-to-day ups and downs. On clear days it is usually within <span data-k="check.clear_mae_pct">6</span>%. The low days are weather, not faults: heavy rain on 27–28 October, cloud on 2 and 4 November, and the cyclone from the 18th.</p>
 
 <h2>Where the electricity goes</h2>
 <p>The house uses solar power directly while the sun is up, sends any surplus to the grid, and buys from the grid at night and on dull days. Under net metering, each unit sent out cancels a unit bought, so the bill is for the difference.</p>
